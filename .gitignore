@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+
+# Logs and debug output
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Build artifacts
+dist/
+build/
+out/
+coverage/
+
+# Runtime/temp/cache
+.cache/
+tmp/
+temp/
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+
+# Environment and sensitive configs
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+settings/settings.json
+settings/estadoBot.json
+settings/lootbox.json
+
+# Session/auth data
+session/
+
+# Dynamic user/game data
+settings/Grupo/Json/*.json
+Games/Json/attp.json
+Games/Json/casino.json
+Games/Json/claim.json
+Games/Json/diario.json
+Games/Json/emoji.json
+Games/Json/mineracao.json
+Games/Json/roleta.json
+Games/Json/cacaniqueis.json
+fuction/totalcmd.json
+
+# Local tooling files
+.deps_cache
+.shardcloud
