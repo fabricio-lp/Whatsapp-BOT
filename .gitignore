@@ -45,7 +45,9 @@ Games/Json/claim.json
 Games/Json/diario.json
 Games/Json/emoji.json
 Games/Json/mineracao.json
+Games/Json/pescar.json
 Games/Json/roleta.json
+Games/Json/questoes.json
 Games/Json/cacaniqueis.json
 fuction/totalcmd.json
 
