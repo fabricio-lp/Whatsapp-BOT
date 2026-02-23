@@ -316,7 +316,7 @@ if (horap >= "01" && horap <= "05") {
 }
 
 
-var { criador, owner, Bot, JpgBot, API_KEY_NAUFRA } = carregarConfiguracoes();
+var { criador, owner, Bot, JpgBot, API_KEY_NAUFRA, INVERTEXTO_API_KEY } = carregarConfiguracoes();
 const prefixo = ["/"];
 
 const pairingCode = true;
