@@ -1577,6 +1577,9 @@ async function startProo() {
               `https://extenso-api.shardweb.app/extenso/${cleanedNumber}`,
               { method: "POST" }
             );
+            if (response.status === 404) {
+              return enviar(`Número inválido`);
+            }
             if (!response.ok) {
               return enviar(`Erro: ${response.status}`);
             }
