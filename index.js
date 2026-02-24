@@ -1574,13 +1574,13 @@ async function startProo() {
             if (q == "67") return enviar("six seven");
             const cleanedNumber = lerNumero(q.trim());
             const response = await fetch(
-              `https://api.invertexto.com/v1/number-to-words?token=${INVERTEXTO_API_KEY}&number=${cleanedNumber}&language=pt`
+              `https://extenso-api.shardweb.app/extenso/${cleanedNumber}`
             );
-            const extenso = await response.json();
-            if (response.status == 422) {
-              return enviar(`Erro: ${response.message}`);
+            if (!response.ok) {
+              return enviar(`Erro: ${response.status}`);
             }
-            enviar(extenso.text);
+            const data = await response.json();
+            enviar(data.extenso);
           } catch (error) {
             enviar("Erro");
           }
