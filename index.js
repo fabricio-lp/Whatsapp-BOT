@@ -28,6 +28,7 @@ const util = require("util");
 const speed = require("performance-now");
 const mimetype = require("mime-types");
 const { exec, spawn, execSync } = require("child_process");
+const crypto = require("crypto");
 let phoneNumber = "5199999999";
 const axios = require("axios");
 const ffmpeg = require("fluent-ffmpeg");
@@ -58,6 +59,67 @@ const formatarTexto = (texto) => {
 const lerNumero = (texto) => {
   if (typeof texto !== "string" || !texto) return texto;
   return texto.replace(/\./g, "");
+};
+
+const ZERO_BIGINT = 0n;
+
+const paraBigIntSeguro = (valor, fallback = ZERO_BIGINT) => {
+  if (typeof valor === "bigint") return valor;
+
+  if (typeof valor === "number") {
+    if (!Number.isFinite(valor) || !Number.isInteger(valor)) return fallback;
+    return BigInt(Math.trunc(valor));
+  }
+
+  if (typeof valor === "string") {
+    const limpo = lerNumero(valor).trim();
+    if (!limpo) return fallback;
+
+    try {
+      return BigInt(limpo);
+    } catch {
+      const numero = Number(limpo);
+      if (Number.isFinite(numero) && Number.isInteger(numero)) {
+        return BigInt(Math.trunc(numero));
+      }
+      return fallback;
+    }
+  }
+
+  return fallback;
+};
+
+const formatarMoeda = (valor) => paraBigIntSeguro(valor, ZERO_BIGINT).toString();
+
+const randomBigIntAbaixo = (limite) => {
+  const maximo = paraBigIntSeguro(limite, ZERO_BIGINT);
+  if (maximo <= ZERO_BIGINT) return ZERO_BIGINT;
+
+  const bits = maximo.toString(2).length;
+  const bytes = Math.ceil(bits / 8);
+  let aleatorio = ZERO_BIGINT;
+
+  do {
+    const hex = crypto.randomBytes(bytes).toString("hex") || "0";
+    aleatorio = BigInt(`0x${hex}`);
+  } while (aleatorio >= maximo);
+
+  return aleatorio;
+};
+
+const calcularPercentualBigInt = (parte, total, casas = 2) => {
+  const totalNormalizado = paraBigIntSeguro(total, ZERO_BIGINT);
+  if (totalNormalizado <= ZERO_BIGINT) {
+    return `0.${"0".repeat(casas)}`;
+  }
+
+  const fatorEscala = 10n ** BigInt(casas);
+  const parteNormalizada = paraBigIntSeguro(parte, ZERO_BIGINT);
+  const percentualEscalado =
+  parteNormalizada * 100n * fatorEscala / totalNormalizado;
+  const inteiro = percentualEscalado / fatorEscala;
+  const fracao = (percentualEscalado % fatorEscala).toString().padStart(casas, "0");
+  return `${inteiro}.${fracao}`;
 };
 
 
@@ -264,13 +326,11 @@ const extrairNomeRegistro = (registro, fallbackNome = "") =>
 registro?.nome ?? fallbackNome;
 
 const extrairDinheiroRegistro = (registro) => {
-  const dinheiro = registro?.dinheiro;
-  return typeof dinheiro === "number" ? dinheiro : 0;
+  return paraBigIntSeguro(registro?.dinheiro, ZERO_BIGINT);
 };
 
 const normalizarRegistroEconomia = (registro, fallbackNome = "") => {
-  const poupanca =
-  typeof registro?.poupanca === "number" ? registro.poupanca : 0;
+  const poupanca = paraBigIntSeguro(registro?.poupanca, ZERO_BIGINT);
   const dinheiro = extrairDinheiroRegistro(registro);
 
   return {
@@ -752,12 +812,9 @@ async function startProo() {
 
       const validarInteiro = (valor) => {
         if (valor === null || valor === undefined || valor === "") return false;
-        const valorLimpo = lerNumero(String(valor));
-        const num = Number(valorLimpo);
-        if (isNaN(num)) return false;
-        if (!Number.isInteger(num)) return false;
-        if (num <= 0) return false;
-        return true;
+        const valorLimpo = lerNumero(String(valor)).trim();
+        if (!/^\d+$/.test(valorLimpo)) return false;
+        return paraBigIntSeguro(valorLimpo, -1n) > ZERO_BIGINT;
       };
 
       const enviar = (texto) => {
@@ -896,12 +953,12 @@ async function startProo() {
       };
 
 
-      var saldoa = moedasDoRemetente(sender);
+      var saldoa = formatarMoeda(moedasDoRemetente(sender));
       const respostasSistema = {
         admin: "Comando apenas para administradores",
         botadmin: "O Bot precisa ser um administrador",
         grupos: "Comando apenas para grupos",
-        vacio: "",
+        vazio: "",
         escolhaValor: `Escolha um valor para ser apostado.
   Saldo atual: ${saldoa}₿`,
         somenteCriador: "Comando para uso exclusivo do criador",
@@ -1615,19 +1672,25 @@ async function startProo() {
         case "nivel":
           {
             if (!isReg) return enviar(respostasSistema.registro);
-            var saldo = moedasDoRemetente(sender);
+            const saldo = paraBigIntSeguro(
+              moedasDoRemetente(sender),
+              ZERO_BIGINT
+            );
             const Xp = xpDoRemetente(sender);
             const Mnv = nivelDoRemetente(sender);
             const Rxxp = requisitoXp(sender);
             const myrep2 = reputacaoDoUsuario(sender);
-            const saldoPoup = saldoPoupancaDoRemetente(sender);
+            const saldoPoup = paraBigIntSeguro(
+              saldoPoupancaDoRemetente(sender),
+              ZERO_BIGINT
+            );
             const Xpnull = Rxxp - 20;
             if (Xp === null) return adicionarXp(sender, Xpnull);
             const Mp = `
 🏷️  Nome      »  @${sender ? sender.split("@")[0] : ""}
 ⚔️  Patente       »  ${Mlevel}
-💰  Dinheiro     »  ${saldo}₿
-🏦  Poupança     »  ${saldoPoup}₿
+💰  Dinheiro     »  ${formatarMoeda(saldo)}₿
+🏦  Poupança     »  ${formatarMoeda(saldoPoup)}₿
 📈  Nível       »  ${Mnv} ➜ ${Mnv + 1}
 📚  XP         »  ${Xp} / ${Rxxp + 20}
 
@@ -1643,8 +1706,13 @@ Progresso:
 
         case "poupanca":
           if (!isReg) return enviar(respostasSistema.registro);
-          const saldoPoupanca = saldoPoupancaDoRemetente(sender);
-          const poup = `🏦 *SUA POUPANÇA* 🏦\n\n💰 Saldo: *${saldoPoupanca}₿*\n\nUse */depositar <valor>* para guardar dinheiro.\nUse */sacar <valor>* para retirar dinheiro.`;
+          const saldoPoupanca = paraBigIntSeguro(
+            saldoPoupancaDoRemetente(sender),
+            ZERO_BIGINT
+          );
+          const poup = `🏦 *SUA POUPANÇA* 🏦\n\n💰 Saldo: *${formatarMoeda(
+            saldoPoupanca
+          )}₿*\n\nUse */depositar <valor>* para guardar dinheiro.\nUse */sacar <valor>* para retirar dinheiro.`;
           sock.sendMessage(
             from,
             { text: poup, mentions: [sender] },
@@ -1659,23 +1727,28 @@ Progresso:
 
           let valorDep;
           if (q.toLowerCase() === "tudo" || q.toLowerCase() === "all") {
-            valorDep = moedasDoRemetente(sender);
+            valorDep = paraBigIntSeguro(moedasDoRemetente(sender), ZERO_BIGINT);
           } else {
             if (!validarInteiro(q))
             return enviar("⚠️ Digite um valor inteiro válido.");
-            valorDep = Number(lerNumero(q));
+            valorDep = paraBigIntSeguro(q, ZERO_BIGINT);
           }
 
-          if (valorDep <= 0)
+          if (valorDep <= ZERO_BIGINT)
           return enviar("⚠️ O valor deve ser maior que zero.");
-          if (moedasDoRemetente(sender) < valorDep)
-          return enviar("❌ Você não tem Bitcoins suficientes na carteira.");
+          if (paraBigIntSeguro(moedasDoRemetente(sender), ZERO_BIGINT) < valorDep) {
+            return enviar("❌ Você não tem Bitcoins suficientes na carteira.");
+          }
 
           await removerMoedas(sender, valorDep);
           await adicionarPoupanca(sender, valorDep);
 
           enviar(
-            `✅ *Depósito realizado!*\n💰 Você guardou *${valorDep}₿* na poupança.\n🏦 Novo saldo na poupança: *${saldoPoupancaDoRemetente(sender)}₿*`
+            `✅ *Depósito realizado!*\n💰 Você guardou *${formatarMoeda(
+              valorDep
+            )}₿* na poupança.\n🏦 Novo saldo na poupança: *${formatarMoeda(
+              saldoPoupancaDoRemetente(sender)
+            )}₿*`
           );
           break;
 
@@ -1684,17 +1757,20 @@ Progresso:
           if (!q) return enviar("⚠️ Digite o valor que deseja sacar.");
 
           let valorSac;
-          const saldoPoup = saldoPoupancaDoRemetente(sender);
+          const saldoPoup = paraBigIntSeguro(
+            saldoPoupancaDoRemetente(sender),
+            ZERO_BIGINT
+          );
 
           if (q.toLowerCase() === "tudo" || q.toLowerCase() === "all") {
             valorSac = saldoPoup;
           } else {
             if (!validarInteiro(q))
             return enviar("⚠️ Digite um valor inteiro válido.");
-            valorSac = Number(lerNumero(q));
+            valorSac = paraBigIntSeguro(q, ZERO_BIGINT);
           }
 
-          if (valorSac <= 0)
+          if (valorSac <= ZERO_BIGINT)
           return enviar("⚠️ O valor deve ser maior que zero.");
           if (saldoPoup < valorSac)
           return enviar("❌ Você não tem Bitcoins suficientes na poupança.");
@@ -1703,16 +1779,25 @@ Progresso:
           await adicionarMoedas(sender, valorSac);
 
           enviar(
-            `✅ *Saque realizado!*\n💰 Você retirou *${valorSac}₿* da poupança.\n👛 Novo saldo na carteira: *${moedasDoRemetente(sender)}₿*`
+            `✅ *Saque realizado!*\n💰 Você retirou *${formatarMoeda(
+              valorSac
+            )}₿* da poupança.\n👛 Novo saldo na carteira: *${formatarMoeda(
+              moedasDoRemetente(sender)
+            )}₿*`
           );
           break;
 
         case "poup":
           if (!isReg) return enviar(respostasSistema.registro);
-          const sP = saldoPoupancaDoRemetente(sender);
-          const sC = moedasDoRemetente(sender);
+          const sP = paraBigIntSeguro(
+            saldoPoupancaDoRemetente(sender),
+            ZERO_BIGINT
+          );
+          const sC = paraBigIntSeguro(moedasDoRemetente(sender), ZERO_BIGINT);
           enviar(
-            `🏦 *FINANÇAS* 🏦\n\n👛 Carteira: *${sC}₿*\n🏦 Poupança: *${sP}₿*`
+            `🏦 *FINANÇAS* 🏦\n\n👛 Carteira: *${formatarMoeda(
+              sC
+            )}₿*\n🏦 Poupança: *${formatarMoeda(sP)}₿*`
           );
           break;
 
@@ -1725,13 +1810,14 @@ Progresso:
           return enviar(
             "⚠️ Por favor, insira um número inteiro válido maior que zero."
           );
-          var saldo = moedasDoRemetente(sender);
-          const valorLimpoT = lerNumero(q);
-          const apostas = Number(valorLimpoT);
-          const valorApostado = Number(valorLimpoT);
+          const saldo = paraBigIntSeguro(moedasDoRemetente(sender), ZERO_BIGINT);
+          const valorApostado = paraBigIntSeguro(q, ZERO_BIGINT);
+          const apostas = valorApostado;
           const agora = Date.now();
           const tempoGuardado = tempoCooldownCacaNiqueis(sender) || 0;
           const tempoRestante = tempoGuardado - agora;
+          if (valorApostado <= ZERO_BIGINT)
+          return enviar("⚠️ O valor deve ser maior que zero.");
           if (valorApostado > saldo) return enviar("SALDO INSUFICIENTE!");
 
           if (tempoRestante > 0) {
@@ -1772,10 +1858,10 @@ Progresso:
           const filaBaixo = obterLinha();
 
           let filaCentro;
-          const probabilidad = Math.random();
+          const probabilidade = Math.random();
 
 
-          if (probabilidad < 0.65) {
+          if (probabilidade < 0.65) {
             const simboloVencedor =
             simbolos[Math.floor(Math.random() * simbolos.length)];
             filaCentro = [simboloVencedor, simboloVencedor, simboloVencedor];
@@ -1793,16 +1879,17 @@ Progresso:
 
 
           if (vencedor) {
-            const premioCantidad =
-            Math.floor(Math.random() * valorApostado) + valorApostado * 2;
+            const quantidadePremio =
+            randomBigIntAbaixo(valorApostado) + valorApostado * 2n;
             const tipoPremio = Math.random() < 0.8 ? "coins" : "exp";
 
             if (tipoPremio === "coins") {
-              await adicionarMoedas(sender, premioCantidad);
-              premioTexto = `🎉 Recebeu ${premioCantidad}₿ 🪙.`;
+              await adicionarMoedas(sender, quantidadePremio);
+              premioTexto = `🎉 Recebeu ${formatarMoeda(quantidadePremio)}₿ 🪙.`;
             } else {
-              await adicionarXp(sender, premioCantidad);
-              premioTexto = `📚 Recebeu ${premioCantidad} de EXP.`;
+              const premioExp = Number(quantidadePremio);
+              await adicionarXp(sender, premioExp);
+              premioTexto = `📚 Recebeu ${premioExp} de EXP.`;
             }
 
             mensagemResultado = "🎉 Você ganhou! 🎉";
@@ -1819,7 +1906,7 @@ Progresso:
             ┗━━━━┓🐯┏━━━━┛
          ◆━━━━━━━▣✦▣━━━━━━━━◆
 
-Você gastou ${apostas} moedas.
+Você gastou ${formatarMoeda(apostas)} moedas.
 
 ${mensagemResultado}
 ${premioTexto}`;
@@ -1962,7 +2049,7 @@ ${msgPatente}`;
           {
             if (!isReg) return enviar(respostasSistema.registro);
             const valorDigitado = q;
-            var valor = moedasDoRemetente(sender);
+            const valor = paraBigIntSeguro(moedasDoRemetente(sender), ZERO_BIGINT);
             const isMinxxx = verificarRoleta(sender);
             if (isMinxxx) {
               const agora = Date.now();
@@ -1971,7 +2058,7 @@ ${msgPatente}`;
               const resultado = (0 - result) / 1000;
               return enviar(`Espere... ${runtime(resultado)} `);
             } else {
-              const premio = Math.floor(Math.random() * valor) + valor * 2;
+              const premio = randomBigIntAbaixo(valor) + valor * 2n;
               const time = 60 * 1000;
               await adicionarRoleta(sender, time);
               const ppt = ["vivo", "morto"];
@@ -1981,12 +2068,12 @@ ${msgPatente}`;
 
               if (pptb === "morto") {
                 vit = `💭「𝘽𝙊𝙊𝙈!」
-💭「${pushname} caiu e perdeu ${valor}₿ 🪙」`;
+💭「${pushname} caiu e perdeu ${formatarMoeda(valor)}₿ 🪙」`;
                 await removerMoedas(sender, valor);
 
               } else if (pptb === "vivo") {
                 vit = `💭「Tec...」
-  💭「${pushname} sobreviveu e ganhou ${premio}₿ 🪙」`;
+  💭「${pushname} sobreviveu e ganhou ${formatarMoeda(premio)}₿ 🪙」`;
                 await adicionarMoedas(sender, premio);
 
               }
@@ -2010,7 +2097,7 @@ ${vit}
             try {
               const mencionado = obterMencionado(info);
               const remetente = sender;
-              const valor = Number(lerNumero(args[1]));
+              const valor = paraBigIntSeguro(args[1], ZERO_BIGINT);
 
               if (!mencionado)
               return enviar(
@@ -2035,7 +2122,7 @@ ${vit}
               await sleep(100);
 
               const saldoAtualizado = await moedasDoUsuario(remetente);
-              enviar(`✅ Pix concluído.\nVocê enviou *${valor}₿.*`, {
+              enviar(`✅ Pix concluído.\nVocê enviou *${formatarMoeda(valor)}₿.*`, {
                 mentions: [remetente, mencionado]
               });
             } catch (e) {
@@ -2049,7 +2136,7 @@ ${vit}
             if (!isOwner) return enviar(respostasSistema.somenteCriador);
             try {
               const mencionado = obterMencionado(info);
-              const valor = Number(lerNumero(args[1]));
+              const valor = paraBigIntSeguro(args[1], ZERO_BIGINT);
 
               if (!mencionado) return enviar("⚠️ Você deve mencionar alguém.");
               if (!validarInteiro(args[1]))
@@ -2060,7 +2147,7 @@ ${vit}
               await adicionarMoedas(mencionado, valor);
               await sleep(100);
 
-              enviar(`✅ Concluído.\nVocê adicionou *${valor}₿.*`);
+              enviar(`✅ Concluído.\nVocê adicionou *${formatarMoeda(valor)}₿.*`);
             } catch (e) {
               enviar("Erro: " + e.message);
             }
@@ -2072,7 +2159,7 @@ ${vit}
             if (!isOwner) return enviar(respostasSistema.somenteCriador);
             try {
               const mencionado = obterMencionado(info);
-              const valor = Number(lerNumero(args[1]));
+              const valor = paraBigIntSeguro(args[1], ZERO_BIGINT);
 
               if (!mencionado) return enviar("⚠️ Você deve mencionar alguém.");
               if (!validarInteiro(args[1]))
@@ -2083,7 +2170,7 @@ ${vit}
               await removerMoedas(mencionado, valor);
               await sleep(100);
 
-              enviar(`✅ Concluído.\nVocê removeu *${valor}₿.*`);
+              enviar(`✅ Concluído.\nVocê removeu *${formatarMoeda(valor)}₿.*`);
             } catch (e) {
               enviar("Erro: " + e.message);
             }
@@ -2109,11 +2196,15 @@ ${vit}
             );
 
             rankingArray.
-            sort((a, b) => b.total - a.total).
+            sort((a, b) => {
+              if (b.total > a.total) return 1;
+              if (b.total < a.total) return -1;
+              return 0;
+            }).
             slice(0, 10).
             forEach((usuario, index) => {
               mensagemRanking += `• ${index + 1}. *${usuario.nome}* => ${
-              usuario.total}₿_\n`;
+              formatarMoeda(usuario.total)}₿_\n`;
 
             });
 
@@ -2447,24 +2538,31 @@ Pos.  User   Nível\n`;
                 [],
                 { salvarFallback: true }
               );
-              let totalPib = 0;
+              let totalPib = ZERO_BIGINT;
 
               if (Array.isArray(registrosData)) {
                 registrosData.forEach((usuario) => {
                   const dadosUsuario = normalizarRegistroEconomia(usuario);
-                  totalPib += dadosUsuario.dinheiro + dadosUsuario.poupanca;
+                  totalPib += dadosUsuario.total;
                 });
               }
 
-              const userMoney = moedasDoRemetente(sender);
-              const userPoupanca = poupancaDoRemetente(sender);
+              const userMoney = paraBigIntSeguro(
+                moedasDoRemetente(sender),
+                ZERO_BIGINT
+              );
+              const userPoupanca = paraBigIntSeguro(
+                poupancaDoRemetente(sender),
+                ZERO_BIGINT
+              );
               const userTotal = userMoney + userPoupanca;
-              let userPercentage = 0;
-              if (totalPib > 0) {
-                userPercentage = userTotal / totalPib * 100;
-              }
+              const userPercentage = calcularPercentualBigInt(
+                userTotal,
+                totalPib,
+                2
+              );
 
-              enviar(`💰 *PIB Total do Bot:* ${totalPib}₿
+              enviar(`💰 *PIB Total do Bot:* ${formatarMoeda(totalPib)}₿
 Você é *${userPercentage}%* do PIB`);
             } catch (e) {
               console.error("Erro ao calcular PIB:", e);

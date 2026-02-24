@@ -10,8 +10,52 @@ const garantirArquivoRegistros = () => {
   }
 };
 
+const normalizarNumeroInteiro = (valor, padrao = 0) => (
+  typeof valor === 'number' && Number.isInteger(valor) ? valor : padrao
+);
+
+const normalizarMoedaBigInt = (valor, padrao = 0n) => {
+  if (typeof valor === 'bigint') return valor;
+
+  if (typeof valor === 'number') {
+    if (!Number.isFinite(valor) || !Number.isInteger(valor)) return padrao;
+    return BigInt(Math.trunc(valor));
+  }
+
+  if (typeof valor === 'string') {
+    const valorLimpo = valor.trim();
+    if (!valorLimpo) return padrao;
+
+    try {
+      return BigInt(valorLimpo);
+    } catch {
+      const numero = Number(valorLimpo);
+      if (Number.isFinite(numero) && Number.isInteger(numero)) {
+        return BigInt(Math.trunc(numero));
+      }
+      return padrao;
+    }
+  }
+
+  return padrao;
+};
+
+const serializarRegistro = (item) => ({
+  id: item.id,
+  nome: item.nome,
+  nivel: item.nivel,
+  xp: item.xp,
+  rxp: item.rxp,
+  dinheiro: item.dinheiro.toString(),
+  rep: item.rep,
+  poupanca: item.poupanca.toString()
+});
+
+const serializarRegistros = (lista) => lista.map((item) => serializarRegistro(item));
+
 const salvarRegistros = (registros) => {
-  fs.writeFileSync(CAMINHO_REGISTROS, `${JSON.stringify(registros, null, 2)}\n`);
+  const registrosSerializados = serializarRegistros(registros);
+  fs.writeFileSync(CAMINHO_REGISTROS, `${JSON.stringify(registrosSerializados, null, 2)}\n`);
 };
 
 const carregarRegistros = () => {
@@ -31,14 +75,16 @@ const carregarRegistros = () => {
   const registrosNormalizados = bruto.filter((item) => item && typeof item === 'object').map((item) => ({
     id: typeof item.id === 'string' ? item.id : '',
     nome: typeof item.nome === 'string' ? item.nome : '',
-    nivel: typeof item.nivel === 'number' ? item.nivel : 1,
-    xp: typeof item.xp === 'number' ? item.xp : 1,
-    rxp: typeof item.rxp === 'number' ? item.rxp : 0,
-    dinheiro: typeof item.dinheiro === 'number' ? item.dinheiro : 0,
-    rep: typeof item.rep === 'number' ? item.rep : 0,
-    poupanca: typeof item.poupanca === 'number' ? item.poupanca : 0
+    nivel: normalizarNumeroInteiro(item.nivel, 1),
+    xp: normalizarNumeroInteiro(item.xp, 1),
+    rxp: normalizarNumeroInteiro(item.rxp, 0),
+    dinheiro: normalizarMoedaBigInt(item.dinheiro, 0n),
+    rep: normalizarNumeroInteiro(item.rep, 0),
+    poupanca: normalizarMoedaBigInt(item.poupanca, 0n)
   })).filter((item) => item.id);
-  if (JSON.stringify(bruto) !== JSON.stringify(registrosNormalizados)) {
+
+  const registrosNormalizadosSerializados = serializarRegistros(registrosNormalizados);
+  if (JSON.stringify(bruto) !== JSON.stringify(registrosNormalizadosSerializados)) {
     salvarRegistros(registrosNormalizados);
   }
   return registrosNormalizados;
@@ -59,25 +105,27 @@ const adicionarRegistro = (remetente, nome) => {
     nivel: 1,
     xp: 1,
     rxp: 0,
-    dinheiro: 50,
+    dinheiro: 50n,
     rep: 0,
-    poupanca: 0
+    poupanca: 0n
   };
   registros.push(novoRegistro);
   salvarRegistros(registros);
 };
 
+const normalizarValorMoeda = (valor) => normalizarMoedaBigInt(valor, 0n);
+
 const removerMoedas = (remetente, valor) => {
   const indice = encontrarIndicePorId(remetente);
   if (indice === -1) return;
-  registros[indice].dinheiro -= valor;
+  registros[indice].dinheiro -= normalizarValorMoeda(valor);
   salvarRegistros(registros);
 };
 
 const adicionarMoedas = (remetente, valor) => {
   const indice = encontrarIndicePorId(remetente);
   if (indice === -1) return;
-  registros[indice].dinheiro += valor;
+  registros[indice].dinheiro += normalizarValorMoeda(valor);
   salvarRegistros(registros);
 };
 
@@ -90,16 +138,16 @@ const moedasDoRemetente = (remetente) => {
 const poupancaDoRemetente = (remetente) => {
   const indice = encontrarIndicePorId(remetente);
   if (indice === -1) return undefined;
-  return registros[indice].poupanca || 0;
+  return registros[indice].poupanca || 0n;
 };
 
 const adicionarPoupanca = (remetente, valor) => {
   const indice = encontrarIndicePorId(remetente);
   if (indice === -1) return;
   if (registros[indice].poupanca === undefined) {
-    registros[indice].poupanca = 0;
+    registros[indice].poupanca = 0n;
   }
-  registros[indice].poupanca += valor;
+  registros[indice].poupanca += normalizarValorMoeda(valor);
   salvarRegistros(registros);
 };
 
@@ -107,29 +155,29 @@ const removerPoupanca = (remetente, valor) => {
   const indice = encontrarIndicePorId(remetente);
   if (indice === -1) return;
   if (registros[indice].poupanca === undefined) {
-    registros[indice].poupanca = 0;
+    registros[indice].poupanca = 0n;
   }
-  registros[indice].poupanca -= valor;
+  registros[indice].poupanca -= normalizarValorMoeda(valor);
   salvarRegistros(registros);
 };
 
 const saldoPoupancaDoRemetente = (remetente) => {
   const indice = encontrarIndicePorId(remetente);
   if (indice === -1) return undefined;
-  return registros[indice].poupanca || 0;
+  return registros[indice].poupanca || 0n;
 };
 
 const removerMoedasUsuario = (usuario, valor) => {
   const indice = encontrarIndicePorId(usuario);
   if (indice === -1) return;
-  registros[indice].dinheiro -= valor;
+  registros[indice].dinheiro -= normalizarValorMoeda(valor);
   salvarRegistros(registros);
 };
 
 const adicionarMoedasUsuario = (usuario, valor) => {
   const indice = encontrarIndicePorId(usuario);
   if (indice === -1) return;
-  registros[indice].dinheiro += valor;
+  registros[indice].dinheiro += normalizarValorMoeda(valor);
   salvarRegistros(registros);
 };
 
