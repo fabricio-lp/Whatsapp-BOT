@@ -1574,7 +1574,8 @@ async function startProo() {
             if (q == "67") return enviar("six seven");
             const cleanedNumber = lerNumero(q.trim());
             const response = await fetch(
-              `https://extenso-api.shardweb.app/extenso/${cleanedNumber}`
+              `https://extenso-api.shardweb.app/extenso/${cleanedNumber}`,
+              { method: "POST" }
             );
             if (!response.ok) {
               return enviar(`Erro: ${response.status}`);
