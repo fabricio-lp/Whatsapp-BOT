@@ -376,7 +376,7 @@ if (horap >= "01" && horap <= "05") {
 }
 
 
-var {owner, API_KEY_NAUFRA, API_KEY_GEMINI, GEMINI_MODEL} = carregarConfiguracoes();
+var {owner, API_KEY_NAUFRA, API_KEY_GEMINI, GEMINI_MODEL, allowedGroups = []} = carregarConfiguracoes();
 const prefixo = ["/"];
 
 const pairingCode = true;
@@ -2471,10 +2471,6 @@ Pos.  User   Nível\n`;
         case "resgatar":
 
           try {
-
-            const allowedGroups = [
-            "120363406690153385@g.us",
-            "120363422859824170@g.us"];
 
             if (!allowedGroups.includes(from)) return;
 
