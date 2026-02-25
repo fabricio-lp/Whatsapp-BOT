@@ -4,7 +4,7 @@ const path = require('path');
 
 const CAMINHO_REGISTROS = path.join(__dirname, '..', 'Json', 'registros.json');
 
-const garantirArquivoRegistros = () => {
+const garantirArquivoRegistros = () => { 
   if (!fs.existsSync(CAMINHO_REGISTROS)) {
     fs.writeFileSync(CAMINHO_REGISTROS, '[]\n');
   }

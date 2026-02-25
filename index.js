@@ -376,7 +376,7 @@ if (horap >= "01" && horap <= "05") {
 }
 
 
-var { criador, owner, Bot, JpgBot, API_KEY_NAUFRA, INVERTEXTO_API_KEY } = carregarConfiguracoes();
+var {owner, API_KEY_NAUFRA, API_KEY_GEMINI, GEMINI_MODEL} = carregarConfiguracoes();
 const prefixo = ["/"];
 
 const pairingCode = true;
@@ -1127,7 +1127,7 @@ async function startProo() {
             if (!isGroup) return;
             if (!isReg) return enviar(respostasSistema.registro);
 
-            const Mnu = Menu(timeFt, Bot, sender, groupName, groupMembers);
+            const Mnu = Menu(timeFt, sender, groupName, groupMembers);
 
             await sock.sendMessage(
               from,
@@ -1592,12 +1592,11 @@ async function startProo() {
 
         case "ia":
         case "gemini":
-        case "bot":
           if (!q || !q.trim()) return enviar("Envie sua pergunta");
 
-          const apiKey = "";
+          const apiKey = API_KEY_GEMINI;
 
-          const modelName = "gemini-3-pro-preview";
+          const modelName = GEMINI_MODEL;
 
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
@@ -1640,7 +1639,7 @@ async function startProo() {
 
         case "debug":
           try {
-            const apiKey = "";
+            const apiKey = API_KEY_GEMINI;
 
             const response = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
@@ -1649,7 +1648,7 @@ async function startProo() {
 
             if (!data.models) {
               return enviar(
-                "A API respondeu, mas não veio lista de modelos. Estranho... " +
+                "A API respondeu, mas não veio lista de modelos." +
                 JSON.stringify(data)
               );
             }

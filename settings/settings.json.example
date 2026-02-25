@@ -1,8 +1,6 @@
 {
-  "Bot": "Bot",
-  "criador": "Seu Nome",
-  "JpgBot": "https://example.com/bot.jpg",
   "owner": "000000000000000@lid",
   "API_KEY_NAUFRA": "SUA_CHAVE_AQUI",
-  "INVERTEXTO_API_KEY": "SUA_CHAVE_AQUI"
+  "API_KEY_GEMINI": "SUA_CHAVE_AQUI"
+  "GEMINI_MODEL": "MODELO DE LINGUAGEM" //(use /debug para verificar os modelos disponíveis)
 }
