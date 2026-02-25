@@ -2519,7 +2519,7 @@ Pos.  User   Nível\n`;
             const targetGroup = "120363406690153385@g.us";
             await sock.sendMessage(targetGroup, { text: msgLoot });
             if (from !== targetGroup)
-            enviar("✅ Lootbox enviada para o grupo oficial!");
+            enviar("✅ Lootbox enviada para os grupos selecionados!");
           } catch (e) {
             console.error(e);
             enviar("Erro ao forçar lootbox.");
