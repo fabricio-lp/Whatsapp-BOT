@@ -27,27 +27,22 @@ const NUMEROS_ROLETA = [
 ];
 
 const EMOJI_COR = { vermelho: '🔴', preto: '⚫', verde: '🟢' };
+const NOME_COR = { vermelho: 'Vermelho', preto: 'Preto', verde: 'Verde' };
 
 // Tipos de aposta e seus multiplicadores
 const TIPOS_APOSTA = {
-  // Numeros individuais (0-36) - paga 35:1
-  // Cores
   vermelho: { tipo: 'cor', valor: 'vermelho', multi: 2, desc: '🔴 Vermelho' },
   preto:    { tipo: 'cor', valor: 'preto',    multi: 2, desc: '⚫ Preto' },
-  // Par/Impar
   par:   { tipo: 'paridade', valor: 'par',   multi: 2, desc: '🔢 Par' },
-  impar: { tipo: 'paridade', valor: 'impar', multi: 2, desc: '🔢 Impar' },
-  // Alto/Baixo
+  impar: { tipo: 'paridade', valor: 'impar', multi: 2, desc: '🔢 Ímpar' },
   baixo: { tipo: 'faixa', valor: 'baixo', multi: 2, desc: '⬇️ Baixo (1-18)' },
   alto:  { tipo: 'faixa', valor: 'alto',  multi: 2, desc: '⬆️ Alto (19-36)' },
-  // Duzias
-  duzia1: { tipo: 'duzia', valor: 1, multi: 3, desc: '1a Duzia (1-12)' },
-  duzia2: { tipo: 'duzia', valor: 2, multi: 3, desc: '2a Duzia (13-24)' },
-  duzia3: { tipo: 'duzia', valor: 3, multi: 3, desc: '3a Duzia (25-36)' },
-  // Colunas
-  coluna1: { tipo: 'coluna', valor: 1, multi: 3, desc: '1a Coluna' },
-  coluna2: { tipo: 'coluna', valor: 2, multi: 3, desc: '2a Coluna' },
-  coluna3: { tipo: 'coluna', valor: 3, multi: 3, desc: '3a Coluna' }
+  duzia1: { tipo: 'duzia', valor: 1, multi: 3, desc: '1ª Dúzia (1-12)' },
+  duzia2: { tipo: 'duzia', valor: 2, multi: 3, desc: '2ª Dúzia (13-24)' },
+  duzia3: { tipo: 'duzia', valor: 3, multi: 3, desc: '3ª Dúzia (25-36)' },
+  coluna1: { tipo: 'coluna', valor: 1, multi: 3, desc: '1ª Coluna' },
+  coluna2: { tipo: 'coluna', valor: 2, multi: 3, desc: '2ª Coluna' },
+  coluna3: { tipo: 'coluna', valor: 3, multi: 3, desc: '3ª Coluna' }
 };
 
 const carregarEstado = () => {
@@ -82,7 +77,6 @@ const verificarAposta = (aposta, resultado) => {
   const num = resultado.numero;
   const cor = resultado.cor;
 
-  // Aposta em numero especifico
   if (aposta.tipoAposta === 'numero') {
     return num === aposta.valorAposta;
   }
@@ -102,9 +96,9 @@ const verificarAposta = (aposta, resultado) => {
       if (aposta.valorAposta === 2) return num >= 13 && num <= 24;
       return num >= 25 && num <= 36;
     case 'coluna':
-      if (aposta.valorAposta === 1) return num % 3 === 1; // 1,4,7,10...34
-      if (aposta.valorAposta === 2) return num % 3 === 2; // 2,5,8,11...35
-      return num % 3 === 0; // 3,6,9,12...36
+      if (aposta.valorAposta === 1) return num % 3 === 1;
+      if (aposta.valorAposta === 2) return num % 3 === 2;
+      return num % 3 === 0;
     default:
       return false;
   }
@@ -114,13 +108,11 @@ const parseAposta = (texto) => {
   if (!texto) return null;
   const t = texto.toLowerCase().trim();
 
-  // Numero direto (0-36)
   const num = parseInt(t, 10);
   if (!isNaN(num) && num >= 0 && num <= 36 && String(num) === t) {
-    return { tipoAposta: 'numero', valorAposta: num, multi: 35, desc: `🔢 Numero ${num}` };
+    return { tipoAposta: 'numero', valorAposta: num, multi: 35, desc: `🔢 Nº ${num}` };
   }
 
-  // Apostas nomeadas
   const tipoInfo = TIPOS_APOSTA[t];
   if (tipoInfo) {
     return { tipoAposta: tipoInfo.tipo, valorAposta: tipoInfo.valor, multi: tipoInfo.multi, desc: tipoInfo.desc };
@@ -135,63 +127,80 @@ const obterTempoRestante = (proximaPartida) => {
 };
 
 const formatarHistorico = (historico, limite = 10) => {
-  if (!historico || historico.length === 0) return 'Nenhuma partida registrada.';
+  if (!historico || historico.length === 0) return '   _Nenhuma partida registrada._';
   const ultimos = historico.slice(-limite).reverse();
-  return ultimos.map((h, i) => {
+  return ultimos.map((h) => {
     const emoji = EMOJI_COR[h.cor] || '⚪';
-    return `${emoji} *${h.numero}* ${h.cor}`;
+    const nome = NOME_COR[h.cor] || h.cor;
+    return `   ${emoji} *${h.numero}* — ${nome}`;
   }).join('\n');
 };
 
-const formatarHistoricoCompacto = (historico, limite = 15) => {
-  if (!historico || historico.length === 0) return '';
+const formatarHistoricoCompacto = (historico, limite = 12) => {
+  if (!historico || historico.length === 0) return '_sem dados_';
   const ultimos = historico.slice(-limite).reverse();
   return ultimos.map(h => {
     const emoji = EMOJI_COR[h.cor] || '⚪';
     return `${emoji}${h.numero}`;
-  }).join(' ');
+  }).join('  ');
+};
+
+// Barra visual para animacao
+const gerarBarraGiro = (etapa, total) => {
+  const preenchido = Math.round((etapa / total) * 10);
+  const vazio = 10 - preenchido;
+  return '▓'.repeat(preenchido) + '░'.repeat(vazio);
 };
 
 // Sequencia de numeros que a "bola" passa durante a animacao
 const gerarSequenciaAnimacao = (resultado) => {
   const frames = [];
-  const qtdFrames = 6;
+  const qtdFrames = 5;
   for (let i = 0; i < qtdFrames; i++) {
     const idx = Math.floor(Math.random() * NUMEROS_ROLETA.length);
     frames.push(NUMEROS_ROLETA[idx]);
   }
-  frames.push(resultado); // Ultimo frame = resultado real
+  frames.push(resultado);
   return frames;
 };
 
 const textoAjuda = () => {
-  return `🎰 *ROLETA REAL - COMO JOGAR* 🎰
+  return `╔══════════════════════╗
+      🎰  *ROLETA REAL*  🎰
+╚══════════════════════╝
 
-📌 *Comandos:*
-/roletareal - Ver status da partida atual
-/apostar <tipo> <valor> - Fazer uma aposta
-/historicoroleta - Ver historico de resultados
+📌 *COMANDOS*
+┌─────────────────────
+│ /roletareal — _Status da rodada_
+│ /apostar <tipo> <valor> — _Apostar_
+│ /historicoroleta — _Histórico_
+└─────────────────────
 
-📌 *Tipos de Aposta:*
-🔴 *vermelho* / ⚫ *preto* - Paga 2x
-🔢 *par* / *impar* - Paga 2x
-⬇️ *baixo* (1-18) / ⬆️ *alto* (19-36) - Paga 2x
-📊 *duzia1* (1-12) / *duzia2* (13-24) / *duzia3* (25-36) - Paga 3x
-📊 *coluna1* / *coluna2* / *coluna3* - Paga 3x
-🔢 *0-36* (numero exato) - Paga 35x
+📌 *TIPOS DE APOSTA*
+┌─────────────────────
+│ 🔴 *vermelho* · ⚫ *preto* — _2x_
+│ 🔢 *par* · *impar* — _2x_
+│ ⬇️ *baixo* (1-18) · ⬆️ *alto* (19-36) — _2x_
+│ 📊 *duzia1* · *duzia2* · *duzia3* — _3x_
+│ 📊 *coluna1* · *coluna2* · *coluna3* — _3x_
+│ 🎯 *0* a *36* (número exato) — _35x_
+└─────────────────────
 
-📌 *Exemplo:*
-/apostar vermelho 1000
-/apostar 17 500
-/apostar duzia1 2000
+📌 *EXEMPLOS*
+┌─────────────────────
+│ /apostar vermelho 1000
+│ /apostar 17 500
+│ /apostar duzia1 2000
+└─────────────────────
 
-⏱️ Partidas a cada 30 segundos.
-A roleta roda em background. So envia mensagens quando alguem aposta.`;
+⏱️ _Rodadas a cada 30s em background._
+_Só notifica quando há apostas._`;
 };
 
 module.exports = {
   NUMEROS_ROLETA,
   EMOJI_COR,
+  NOME_COR,
   TIPOS_APOSTA,
   carregarEstado,
   salvarEstado,
@@ -201,6 +210,7 @@ module.exports = {
   obterTempoRestante,
   formatarHistorico,
   formatarHistoricoCompacto,
+  gerarBarraGiro,
   gerarSequenciaAnimacao,
   textoAjuda
 };
