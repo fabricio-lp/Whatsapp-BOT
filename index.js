@@ -222,15 +222,18 @@ const {
   obterTempoRestante,
   formatarHistorico,
   formatarHistoricoCompacto,
+  gerarBarraGiro,
   gerarSequenciaAnimacao,
   textoAjuda: textoAjudaRoleta,
-  EMOJI_COR
+  EMOJI_COR,
+  NOME_COR
 } = require("./Games/Js/roletaReal.js");
 
 // Estado global da roleta real
 let estadoRoletaReal = carregarEstadoRoleta();
 let proximaPartidaRoleta = Date.now() + 30000;
 let roletaRealInterval = null;
+let roletaProcessando = false;
 
 const Menu = require("./settings/Bot/Js/menu.js");
 
@@ -546,6 +549,11 @@ async function startProo() {
     try {
       const agora = Date.now();
       if (agora < proximaPartidaRoleta) return;
+      if (roletaProcessando) return;
+      roletaProcessando = true;
+
+      // Agendar proxima ANTES de processar (evita re-entrada)
+      proximaPartidaRoleta = Date.now() + 30000;
 
       const estado = carregarEstadoRoleta();
       const resultado = girarRoleta();
@@ -562,7 +570,12 @@ async function startProo() {
         estado.historico = estado.historico.slice(-100);
       }
 
-      const apostasPartida = estado.apostas;
+      // Capturar e limpar apostas IMEDIATAMENTE (evita duplicacao)
+      const apostasPartida = [...estado.apostas];
+      estado.apostas = [];
+      salvarEstadoRoleta(estado);
+      estadoRoletaReal = estado;
+
       const temApostas = apostasPartida.length > 0;
 
       if (temApostas) {
@@ -576,79 +589,77 @@ async function startProo() {
         for (const grupoJid of Object.keys(grupoApostas)) {
           const apostasGrupo = grupoApostas[grupoJid];
           const emojiRes = EMOJI_COR[resultado.cor] || '⚪';
+          const nomeRes = NOME_COR[resultado.cor] || resultado.cor;
           const frames = gerarSequenciaAnimacao(resultado);
+          const totalFrames = frames.length;
 
-          // Enviar mensagem inicial da animacao
-          let textoAnimacao = `🎰 *ROLETA REAL - PARTIDA #${estado.partidaAtual}* 🎰\n\n🔄 A bola esta girando...\n\n⚪ ??? `;
+          // Msg inicial da animacao
+          const barra0 = gerarBarraGiro(0, totalFrames);
+          let textoAnimacao = `╔══════════════════════╗\n      🎰  *ROLETA REAL*  🎰\n╚══════════════════════╝\n\n🏷️ Partida *#${estado.partidaAtual}*\n\n🔄 _A bola está girando..._\n\n   ⚪  *?*\n\n   ${barra0}`;
           const msgAnimacao = await sock.sendMessage(grupoJid, { text: textoAnimacao });
 
-          // Animacao por edicao de mensagem
-          for (let i = 0; i < frames.length; i++) {
-            await new Promise(r => setTimeout(r, 800));
+          // Animacao frame a frame (so edita, nunca envia msg nova)
+          for (let i = 0; i < totalFrames; i++) {
+            await new Promise(r => setTimeout(r, 700));
             const frame = frames[i];
             const emojiFrame = EMOJI_COR[frame.cor] || '⚪';
-            const eUltimo = i === frames.length - 1;
+            const nomeFrame = NOME_COR[frame.cor] || frame.cor;
+            const eUltimo = i === totalFrames - 1;
+            const barra = gerarBarraGiro(i + 1, totalFrames);
 
             if (!eUltimo) {
-              textoAnimacao = `🎰 *ROLETA REAL - PARTIDA #${estado.partidaAtual}* 🎰\n\n🔄 A bola esta girando...\n\n${emojiFrame} *${frame.numero}* ${frame.cor} ${'▪️'.repeat(i + 1)}`;
+              textoAnimacao = `╔══════════════════════╗\n      🎰  *ROLETA REAL*  🎰\n╚══════════════════════╝\n\n🏷️ Partida *#${estado.partidaAtual}*\n\n🔄 _A bola está girando..._\n\n   ${emojiFrame}  *${frame.numero}* — _${nomeFrame}_\n\n   ${barra}`;
+
+              await sock.sendMessage(grupoJid, {
+                text: textoAnimacao,
+                edit: msgAnimacao.key
+              });
             } else {
-              // Frame final com resultados
+              // Frame final — calcular resultados
               let textoResultados = '';
               const mentions = [];
+              const pagamentos = [];
+
               for (const ap of apostasGrupo) {
                 const ganhou = verificarAposta(ap, resultado);
                 const userTag = `@${ap.user.split('@')[0]}`;
                 mentions.push(ap.user);
+
                 if (ganhou) {
                   const premio = BigInt(ap.valor) * BigInt(ap.multi);
-                  textoResultados += `\n✅ ${userTag} apostou *${ap.desc}* (${ap.valor}₿) e ganhou *${premio}₿*`;
-                  ap.ganhou = true;
-                  ap.premio = premio.toString();
+                  textoResultados += `\n│  ✅ ${userTag} › *${ap.desc}*\n│      ${ap.valor}₿ ➜ *+${premio}₿* 🎉`;
+                  pagamentos.push({ user: ap.user, premio });
                 } else {
-                  textoResultados += `\n❌ ${userTag} apostou *${ap.desc}* (${ap.valor}₿) e perdeu`;
-                  ap.ganhou = false;
-                  ap.premio = '0';
+                  textoResultados += `\n│  ❌ ${userTag} › *${ap.desc}*\n│      _-${ap.valor}₿_`;
                 }
               }
 
-              const historicoCompacto = formatarHistoricoCompacto(estado.historico, 10);
-              textoAnimacao = `🎰 *ROLETA REAL - PARTIDA #${estado.partidaAtual}* 🎰\n\n🎯 Resultado: ${emojiRes} *${resultado.numero}* ${resultado.cor}\n${textoResultados}\n\n📊 Ultimos: ${historicoCompacto}`;
+              const historicoCompacto = formatarHistoricoCompacto(estado.historico, 8);
+
+              textoAnimacao = `╔══════════════════════╗\n      🎰  *ROLETA REAL*  🎰\n╚══════════════════════╝\n\n🏷️ Partida *#${estado.partidaAtual}*\n\n🎯 Resultado:  ${emojiRes}  *${resultado.numero}* — *${nomeRes}*\n\n┌─── 💰 *APOSTAS* ───${textoResultados}\n└─────────────────────\n\n📊 ${historicoCompacto}`;
 
               await sock.sendMessage(grupoJid, {
                 text: textoAnimacao,
                 mentions: mentions,
                 edit: msgAnimacao.key
               });
-            }
 
-            if (!eUltimo) {
-              await sock.sendMessage(grupoJid, {
-                text: textoAnimacao,
-                edit: msgAnimacao.key
-              });
-            }
-          }
-
-          // Processar pagamentos
-          for (const ap of apostasGrupo) {
-            if (ap.ganhou) {
-              await adicionarMoedas(ap.user, BigInt(ap.premio));
+              // Processar pagamentos DEPOIS de exibir resultado
+              for (const pag of pagamentos) {
+                await adicionarMoedas(pag.user, pag.premio);
+              }
             }
           }
         }
       }
 
-      // Limpar apostas para proxima rodada
-      estado.apostas = [];
-      salvarEstadoRoleta(estado);
-      estadoRoletaReal = estado;
-      proximaPartidaRoleta = Date.now() + 30000;
+      roletaProcessando = false;
 
     } catch (err) {
       console.error("Erro na Roleta Real:", err);
-      proximaPartidaRoleta = Date.now() + 30000;
+      roletaProcessando = false;
     }
-  }, 5000); // Verifica a cada 5s se ja e hora de rodar
+  }, 3000);
 
 
   sock.ev.on("connection.update", async (update) => {
@@ -2183,34 +2194,38 @@ ${msgPatente}`;
             if (!isGroup) return enviar(respostasSistema.grupos);
             if (!isReg) return enviar(respostasSistema.registro);
 
-            const segsRestantes = obterTempoRestante(proximaPartidaRoleta);
-            const estadoAtual = carregarEstadoRoleta();
-            const apostasAtuais = estadoAtual.apostas.filter(a => a.grupo === from);
-            const historicoComp = formatarHistoricoCompacto(estadoAtual.historico, 10);
-
-            let msgStatus = `🎰 *ROLETA REAL* 🎰\n\n`;
-            msgStatus += `📍 Partida: *#${estadoAtual.partidaAtual + 1}*\n`;
-            msgStatus += `⏱️ Proxima rodada em: *${segsRestantes}s*\n`;
-
-            if (apostasAtuais.length > 0) {
-              msgStatus += `\n🎲 *Apostas nesta rodada:*\n`;
-              for (const ap of apostasAtuais) {
-                msgStatus += `  • @${ap.user.split('@')[0]}: ${ap.desc} - ${ap.valor}₿\n`;
-              }
-            } else {
-              msgStatus += `\n📭 Nenhuma aposta nesta rodada.`;
-            }
-
-            if (historicoComp) {
-              msgStatus += `\n\n📊 Ultimos: ${historicoComp}`;
-            }
-
-            msgStatus += `\n\nDigite */apostar <tipo> <valor>* para participar!`;
-            msgStatus += `\nDigite */roletareal ajuda* para ver as opcoes.`;
-
             if (q && (q.toLowerCase() === 'ajuda' || q.toLowerCase() === 'help')) {
               return enviar(textoAjudaRoleta());
             }
+
+            const segsRestantes = obterTempoRestante(proximaPartidaRoleta);
+            const estadoAtual = carregarEstadoRoleta();
+            const apostasAtuais = estadoAtual.apostas.filter(a => a.grupo === from);
+            const historicoComp = formatarHistoricoCompacto(estadoAtual.historico, 8);
+
+            let listaApostas = '';
+            if (apostasAtuais.length > 0) {
+              listaApostas = `\n┌─── 🎲 *APOSTAS* ───`;
+              for (const ap of apostasAtuais) {
+                listaApostas += `\n│  @${ap.user.split('@')[0]} › ${ap.desc} — *${ap.valor}₿*`;
+              }
+              listaApostas += `\n└─────────────────────`;
+            } else {
+              listaApostas = `\n   📭 _Nenhuma aposta nesta rodada._`;
+            }
+
+            const msgStatus = `╔══════════════════════╗
+      🎰  *ROLETA REAL*  🎰
+╚══════════════════════╝
+
+🏷️ Partida: *#${estadoAtual.partidaAtual + 1}*
+⏱️ Próxima rodada em: *${segsRestantes}s*
+${listaApostas}
+
+📊 ${historicoComp}
+
+💡 */apostar <tipo> <valor>*
+❓ */roletareal ajuda*`;
 
             sock.sendMessage(from, {
               text: msgStatus,
@@ -2225,26 +2240,36 @@ ${msgPatente}`;
             if (!isReg) return enviar(respostasSistema.registro);
 
             if (!args[0] || !args[1]) {
-              return enviar(`🎰 *USO:* /apostar <tipo> <valor>\n\nExemplos:\n/apostar vermelho 1000\n/apostar 17 500\n/apostar par 2000\n\nDigite */roletareal ajuda* para ver todos os tipos.`);
+              return enviar(`╭─── 🎰 *APOSTAR* ───
+│
+│  *Uso:* /apostar <tipo> <valor>
+│
+│  *Exemplos:*
+│  /apostar vermelho 1000
+│  /apostar 17 500
+│  /apostar par 2000
+│
+│  ❓ */roletareal ajuda*
+╰─────────────────────`);
             }
 
             const tipoAposta = args[0].toLowerCase();
             const valorApostaStr = args[1];
 
             if (!validarInteiro(valorApostaStr)) {
-              return enviar("⚠️ Insira um valor inteiro valido maior que zero.");
+              return enviar("⚠️ Insira um valor inteiro válido maior que zero.");
             }
 
             const apostaInfo = parseAposta(tipoAposta);
             if (!apostaInfo) {
-              return enviar(`⚠️ Tipo de aposta invalido: *${tipoAposta}*\n\nDigite */roletareal ajuda* para ver as opcoes.`);
+              return enviar(`⚠️ Tipo de aposta inválido: *${tipoAposta}*\n\n❓ */roletareal ajuda*`);
             }
 
             const saldoApostador = paraBigIntSeguro(moedasDoRemetente(sender), ZERO_BIGINT);
             const valorAposta = paraBigIntSeguro(valorApostaStr, ZERO_BIGINT);
 
             if (valorAposta <= ZERO_BIGINT) return enviar("⚠️ O valor deve ser maior que zero.");
-            if (valorAposta > saldoApostador) return enviar(`❌ Saldo insuficiente! Voce tem *${formatarMoeda(saldoApostador)}₿*`);
+            if (valorAposta > saldoApostador) return enviar(`❌ Saldo insuficiente!\n💰 Você tem *${formatarMoeda(saldoApostador)}₿*`);
 
             // Verificar se ja tem aposta do mesmo tipo nesta rodada
             const estadoAp = carregarEstadoRoleta();
@@ -2252,13 +2277,13 @@ ${msgPatente}`;
               a => a.user === sender && a.grupo === from && a.tipoAposta === apostaInfo.tipoAposta && a.valorAposta === apostaInfo.valorAposta
             );
             if (jaApostou) {
-              return enviar("⚠️ Voce ja fez essa mesma aposta nesta rodada. Espere a proxima.");
+              return enviar("⚠️ Você já apostou isso nesta rodada. Aguarde a próxima.");
             }
 
             // Limite de 3 apostas por rodada por usuario
             const apostasDoUser = estadoAp.apostas.filter(a => a.user === sender && a.grupo === from);
             if (apostasDoUser.length >= 3) {
-              return enviar("⚠️ Maximo de 3 apostas por rodada.");
+              return enviar("⚠️ Máximo de *3 apostas* por rodada.");
             }
 
             // Debitar e registrar
@@ -2280,7 +2305,14 @@ ${msgPatente}`;
             const segsAte = obterTempoRestante(proximaPartidaRoleta);
 
             sock.sendMessage(from, {
-              text: `🎰 *APOSTA REGISTRADA!*\n\n🎲 Tipo: *${apostaInfo.desc}*\n💰 Valor: *${formatarMoeda(valorAposta)}₿*\n💵 Multiplicador: *${apostaInfo.multi}x*\n⏱️ Resultado em: *${segsAte}s*\n\nBoa sorte!`,
+              text: `╭─── ✅ *APOSTA FEITA* ───
+│
+│  🎲  *${apostaInfo.desc}*
+│  💰  *${formatarMoeda(valorAposta)}₿*
+│  💵  Multiplicador: *${apostaInfo.multi}x*
+│  ⏱️  Resultado em *${segsAte}s*
+│
+╰─── _Boa sorte!_ 🍀 ───`,
               mentions: [sender]
             }, { quoted: info });
           }
@@ -2294,8 +2326,17 @@ ${msgPatente}`;
 
             const estadoHist = carregarEstadoRoleta();
             const histText = formatarHistorico(estadoHist.historico, 20);
+            const totalP = estadoHist.partidaAtual;
 
-            enviar(`🎰 *HISTORICO DA ROLETA REAL* 🎰\n\n📊 Ultimas ${Math.min(20, estadoHist.historico.length)} partidas:\n\n${histText}\n\n📈 Total de partidas: *${estadoHist.partidaAtual}*`);
+            enviar(`╔══════════════════════╗
+      🎰  *HISTÓRICO*  🎰
+╚══════════════════════╝
+
+📊 Últimas *${Math.min(20, estadoHist.historico.length)}* partidas:
+
+${histText}
+
+📈 Total de partidas: *${totalP}*`);
           }
           break;
 
