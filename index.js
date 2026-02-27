@@ -394,7 +394,10 @@ if (horap >= "01" && horap <= "05") {
 }
 
 
-var {owner, API_KEY_NAUFRA, API_KEY_GEMINI, GEMINI_MODEL, allowedGroups = []} = carregarConfiguracoes();
+var {owner, API_KEY_NAUFRA, API_KEY_GEMINI, GEMINI_MODEL, targetGroup = []} = carregarConfiguracoes();
+const targetGroupsList = Array.isArray(targetGroup) ?
+targetGroup.filter((jid) => typeof jid === "string" && jid.trim()).map((jid) => jid.trim()) :
+typeof targetGroup === "string" && targetGroup.trim() ? [targetGroup.trim()] : [];
 const prefixo = ["/"];
 
 const pairingCode = true;
@@ -518,7 +521,6 @@ async function startProo() {
     try {
       const lbState = getLootboxState();
       const now = Date.now();
-      const targetGroup = "120363406690153385@g.us";
 
 
       if (!lbState.active && now >= lbState.nextDrop) {
@@ -530,8 +532,12 @@ async function startProo() {
         saveLootboxState(lbState);
 
         const msgLoot = `🎁 *LOOTBOX DISPONÍVEL!* 🎁\n\n💰 Valor: *??? Bitcoins*\n🏃‍♂️ Digite */resgatar* rápido para pegar!`;
-        await sock.sendMessage(targetGroup, { text: msgLoot });
-        console.log(chalk.yellow("🎁 Lootbox enviada para o grupo!"));
+        for (const groupId of targetGroupsList) {
+          await sock.sendMessage(groupId, { text: msgLoot });
+        }
+        if (targetGroupsList.length > 0) {
+          console.log(chalk.yellow(`🎁 Lootbox enviada para ${targetGroupsList.length} grupo(s)!`));
+        }
       }
     } catch (err) {
       console.error("Erro no intervalo da Lootbox:", err);
@@ -2724,7 +2730,7 @@ Pos.  User   Nível\n`;
 
           try {
 
-            if (!allowedGroups.includes(from)) return;
+            if (!targetGroupsList.includes(from)) return;
 
             const lbState = getLootboxState();
 
@@ -2768,9 +2774,10 @@ Pos.  User   Nível\n`;
             saveLootboxState(lbState);
 
             const msgLoot = `🎁 *LOOTBOX DISPONÍVEL!* 🎁\n\n💰 Valor: *???₿*\n🏃‍♂️ Digite */resgatar* rápido para pegar!`;
-            const targetGroup = "120363406690153385@g.us";
-            await sock.sendMessage(targetGroup, { text: msgLoot });
-            if (from !== targetGroup)
+            for (const groupId of targetGroupsList) {
+              await sock.sendMessage(groupId, { text: msgLoot });
+            }
+            if (!targetGroupsList.includes(from))
             enviar("✅ Lootbox enviada para os grupos selecionados!");
           } catch (e) {
             console.error(e);
