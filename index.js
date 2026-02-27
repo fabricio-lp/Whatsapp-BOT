@@ -395,6 +395,50 @@ if (horap >= "01" && horap <= "05") {
 
 
 var {owner, API_KEY_BRONXYS, API_KEY_GEMINI, GEMINI_MODEL, targetGroup = []} = carregarConfiguracoes();
+
+const normalizarIdentificador = (valor) => {
+  if (valor === undefined || valor === null) return "";
+  const texto = String(valor).trim().toLowerCase();
+  if (!texto) return "";
+  return texto.split(":")[0];
+};
+
+const adicionarIdentificadores = (set, valor) => {
+  const base = normalizarIdentificador(valor);
+  if (!base) return;
+
+  set.add(base);
+
+  if (base.includes("@")) {
+    const [usuario, dominio] = base.split("@");
+    if (!usuario || !dominio) return;
+
+    const digitos = usuario.replace(/\D/g, "");
+    if (digitos && (dominio === "s.whatsapp.net" || dominio === "c.us")) {
+      set.add(digitos);
+    }
+    return;
+  }
+
+  const digitos = base.replace(/\D/g, "");
+  if (!digitos) return;
+  set.add(digitos);
+  set.add(`${digitos}@s.whatsapp.net`);
+  set.add(`${digitos}@c.us`);
+};
+
+const ownerList = (
+  Array.isArray(owner) ? owner :
+  owner === undefined || owner === null ? [] : [owner]
+).
+map((valor) => String(valor).trim()).
+filter(Boolean);
+
+const ownerIdentifiers = new Set();
+for (const ownerId of ownerList) {
+  adicionarIdentificadores(ownerIdentifiers, ownerId);
+}
+
 const targetGroupsList = Array.isArray(targetGroup) ?
 targetGroup.filter((jid) => typeof jid === "string" && jid.trim()).map((jid) => jid.trim()) :
 typeof targetGroup === "string" && targetGroup.trim() ? [targetGroup.trim()] : [];
@@ -475,6 +519,14 @@ async function startProo() {
     }
     return originalSendMessage(jid, content, options);
   };
+
+  const lidParaPn = new Map();
+  sock.ev.on("chats.phoneNumberShare", ({ lid, jid }) => {
+    const lidNormalizado = normalizarIdentificador(lid);
+    const jidNormalizado = normalizarIdentificador(jid);
+    if (!lidNormalizado || !jidNormalizado) return;
+    lidParaPn.set(lidNormalizado, jidNormalizado);
+  });
 
 
   if (!sock.authState.creds.registered) {
@@ -777,8 +829,6 @@ async function startProo() {
 
       if (!pes) pes = "";
 
-      const numerodono = [`${owner}`];
-
       const verificarN = async (sla) => {
         const [result] = await sock.onWhatsApp(sla);
         if (result == undefined) {
@@ -790,7 +840,13 @@ async function startProo() {
 
 
       const isGroup = info.key.remoteJid.endsWith("@g.us");
-      const sender = isGroup ? info.key.participant || info.participant : from;
+      const sender =
+      isGroup ?
+      info.key.participant ||
+      info.participant ||
+      info.key.participantLid ||
+      info.key.participantPn :
+      from;
       const groupMetadata = isGroup ? await sock.groupMetadata(from) : "";
       const groupName = isGroup ? groupMetadata.subject : "";
       const groupDesc = isGroup ? groupMetadata.desc : "";
@@ -838,7 +894,34 @@ async function startProo() {
       const BotNumber = sock.user?.id ?
       sock.user.id.split(":")[0] + "@s.whatsapp.net" :
       "";
-      const isOwner = sender ? numerodono.includes(sender) : false;
+      const senderIdentifiers = new Set();
+      adicionarIdentificadores(senderIdentifiers, sender);
+      adicionarIdentificadores(senderIdentifiers, info.key?.senderPn);
+      adicionarIdentificadores(senderIdentifiers, info.key?.participantPn);
+
+      const senderBase = normalizarIdentificador(sender);
+      if (senderBase && senderBase.endsWith("@lid")) {
+        const senderPnMapeado = lidParaPn.get(senderBase);
+        if (senderPnMapeado) {
+          adicionarIdentificadores(senderIdentifiers, senderPnMapeado);
+        }
+      }
+
+      const isOwner = [...senderIdentifiers].some((id) =>
+      ownerIdentifiers.has(id)
+      );
+      const isOwnerId = (jid) => {
+        const ids = new Set();
+        adicionarIdentificadores(ids, jid);
+
+        const jidBase = normalizarIdentificador(jid);
+        if (jidBase && jidBase.endsWith("@lid")) {
+          const jidMapeado = lidParaPn.get(jidBase);
+          if (jidMapeado) adicionarIdentificadores(ids, jidMapeado);
+        }
+
+        return [...ids].some((id) => ownerIdentifiers.has(id));
+      };
 
       const isGroupAdmins = groupAdmins.some((admin) =>
       admin.id?.includes(sender)
@@ -1367,7 +1450,7 @@ async function startProo() {
             console.log("Número que executa o comando:", sender);
             console.log(
               "Número(s) configurados como owner:",
-              global.owner || owner || "Não definido"
+              ownerList.length ? ownerList.join(", ") : "Não definido"
             );
             console.log("É owner?:", isOwner);
 
@@ -1560,7 +1643,7 @@ async function startProo() {
               "Você deve mencionar alguém para usar este comando"
             );
 
-            if (mentioned === BotNumber || mentioned === owner)
+            if (mentioned === BotNumber || isOwnerId(mentioned))
             return enviar("Não");
             await sock.groupParticipantsUpdate(from, [mentioned], "remove");
             enviar("Ação realizada com sucesso");
