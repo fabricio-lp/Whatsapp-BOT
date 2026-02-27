@@ -546,6 +546,7 @@ async function startProo() {
     try {
       const agora = Date.now();
       if (agora < proximaPartidaRoleta) return;
+      proximaPartidaRoleta = agora + 30000;
 
       const estado = carregarEstadoRoleta();
       const resultado = girarRoleta();
@@ -642,7 +643,6 @@ async function startProo() {
       estado.apostas = [];
       salvarEstadoRoleta(estado);
       estadoRoletaReal = estado;
-      proximaPartidaRoleta = Date.now() + 30000;
 
     } catch (err) {
       console.error("Erro na Roleta Real:", err);

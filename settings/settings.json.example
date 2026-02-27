@@ -4,4 +4,5 @@
   "API_KEY_GEMINI": "SUA_CHAVE_AQUI", //
   "GEMINI_MODEL": "MODELO DE LINGUAGEM", //(use /debug para verificar os modelos disponíveis),
   "allowedGroups": [] //grupos em que a lootbox vai ser enviada
+  "targetGroup": 
 }
