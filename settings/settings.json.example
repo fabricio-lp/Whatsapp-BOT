@@ -1,10 +1,9 @@
 {
   "owner": "000000000000000@lid",
-  "API_KEY_NAUFRA": "SUA_CHAVE_AQUI",
-  "API_KEY_GEMINI": "SUA_CHAVE_AQUI",
-  "GEMINI_MODEL": "MODELO_DE_LINGUAGEM",
+  "API_KEY_BRONXYS": "SUA_CHAVE_AQUI", // consiga a sua em https://api.bronxyshost.com.br
+  "API_KEY_GEMINI": "SUA_CHAVE_AQUI", // consiga a sua em https://aistudio.google.com/api-keys
+  "GEMINI_MODEL": "MODELO_DE_LINGUAGEM", // veja a lista de modelos disponíveis após configurar a api key e enviar o comando /debug 
   "targetGroup": [
-    "120000000000000000@g.us",
-    "120000000000000001@g.us"
-  ]
+    "120000000000000000@g.us"
+  ] // lista de grupos em que a lootbox vai ser enviada
 }

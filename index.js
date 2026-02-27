@@ -394,7 +394,7 @@ if (horap >= "01" && horap <= "05") {
 }
 
 
-var {owner, API_KEY_NAUFRA, API_KEY_GEMINI, GEMINI_MODEL, targetGroup = []} = carregarConfiguracoes();
+var {owner, API_KEY_BRONXYS, API_KEY_GEMINI, GEMINI_MODEL, targetGroup = []} = carregarConfiguracoes();
 const targetGroupsList = Array.isArray(targetGroup) ?
 targetGroup.filter((jid) => typeof jid === "string" && jid.trim()).map((jid) => jid.trim()) :
 typeof targetGroup === "string" && targetGroup.trim() ? [targetGroup.trim()] : [];
@@ -1630,7 +1630,7 @@ async function startProo() {
             let res = await axios.get(
               `https://api.bronxyshost.com.br/api-bronxys/attp_edit?texto=${encodeURIComponent(
                 q
-              )}&fonte=${Fontes}&apikey=${API_KEY_NAUFRA}`,
+              )}&fonte=${Fontes}&apikey=${API_KEY_BRONXYS}`,
               {
                 responseType: "arraybuffer"
               }
@@ -2503,7 +2503,7 @@ Pos.  User   Nível\n`;
               {
                 params: {
                   nome: q,
-                  apikey: API_KEY_NAUFRA
+                  apikey: API_KEY_BRONXYS
                 }
               }
             );
@@ -2540,7 +2540,7 @@ Pos.  User   Nível\n`;
               from,
               {
                 audio: {
-                  url: `https://api.bronxyshost.com.br/api-bronxys/play?nome_url=${q}&apikey=${API_KEY_NAUFRA}`
+                  url: `https://api.bronxyshost.com.br/api-bronxys/play?nome_url=${q}&apikey=${API_KEY_BRONXYS}`
                 },
                 mimetype: "audio/mpeg",
                 fileName: data[0]?.titulo || "play.mp3"
@@ -2569,7 +2569,7 @@ Pos.  User   Nível\n`;
 
 
               let data = await fetchJson(
-                `https://api.bronxyshost.com.br/api-bronxys/pesquisa_ytb?nome=${q}&apikey=${API_KEY_NAUFRA}`
+                `https://api.bronxyshost.com.br/api-bronxys/pesquisa_ytb?nome=${q}&apikey=${API_KEY_BRONXYS}`
               );
 
               if (data[0]?.tempo?.length >= 7)
@@ -2601,7 +2601,7 @@ Pos.  User   Nível\n`;
                 from,
                 {
                   video: {
-                    url: `https://api.bronxyshost.com.br/api-bronxys/play_video?nome_url=${q}&apikey=${API_KEY_NAUFRA}`
+                    url: `https://api.bronxyshost.com.br/api-bronxys/play_video?nome_url=${q}&apikey=${API_KEY_BRONXYS}`
                   },
                   mimetype: "video/mp4",
                   fileName: data[0]?.titulo || "play.mp4"
@@ -2628,7 +2628,7 @@ Pos.  User   Nível\n`;
 
 
             let response = await fetch(
-              `https://api.bronxyshost.com.br/api-bronxys/tiktok?url=${q}&apikey=${API_KEY_NAUFRA}`
+              `https://api.bronxyshost.com.br/api-bronxys/tiktok?url=${q}&apikey=${API_KEY_BRONXYS}`
             );
 
 
@@ -2665,7 +2665,7 @@ Pos.  User   Nível\n`;
               from,
               {
                 audio: {
-                  url: `https://api.bronxyshost.com.br/api-bronxys/tiktok?url=${q}&apikey=${API_KEY_NAUFRA}`
+                  url: `https://api.bronxyshost.com.br/api-bronxys/tiktok?url=${q}&apikey=${API_KEY_BRONXYS}`
                 },
                 mimetype: "audio/mpeg"
               },
@@ -2688,7 +2688,7 @@ Pos.  User   Nível\n`;
           try {
             enviar("Aguarde...");
             let abc = await fetchJson(
-              `https://api.bronxyshost.com.br/api-bronxys/aptoide_pesquisa?pesquisa=${q.trim()}&apikey=${API_KEY_NAUFRA}`
+              `https://api.bronxyshost.com.br/api-bronxys/aptoide_pesquisa?pesquisa=${q.trim()}&apikey=${API_KEY_BRONXYS}`
             );
             enviar(abc.aptoide || "Nenhuma informação encontrada.");
           } catch (e) {
@@ -2707,7 +2707,7 @@ Pos.  User   Nível\n`;
           enviar("Enviando apk...");
           try {
             abc = await fetchJson(
-              `https://api.bronxyshost.com.br/api-bronxys/aptoide?url=${q.trim()}&apikey=${API_KEY_NAUFRA}`
+              `https://api.bronxyshost.com.br/api-bronxys/aptoide?url=${q.trim()}&apikey=${API_KEY_BRONXYS}`
             );
             sock.
             sendMessage(
