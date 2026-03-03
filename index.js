@@ -116,7 +116,7 @@ const calcularPercentualBigInt = (parte, total, casas = 2) => {
   const fatorEscala = 10n ** BigInt(casas);
   const parteNormalizada = paraBigIntSeguro(parte, ZERO_BIGINT);
   const percentualEscalado =
-  parteNormalizada * 100n * fatorEscala / totalNormalizado;
+    parteNormalizada * 100n * fatorEscala / totalNormalizado;
   const inteiro = percentualEscalado / fatorEscala;
   const fracao = (percentualEscalado % fatorEscala).toString().padStart(casas, "0");
   return `${inteiro}.${fracao}`;
@@ -240,7 +240,7 @@ const CAMINHO_SETTINGS = "./settings/settings.json";
 const CAMINHO_PATENTES = "./settings/patentes.json";
 
 const normalizarConteudoJson = (conteudo) =>
-typeof conteudo === "string" ? conteudo.replace(/^\uFEFF/, "").trim() : "";
+  typeof conteudo === "string" ? conteudo.replace(/^\uFEFF/, "").trim() : "";
 
 const escreverFallbackJson = (caminho, fallback, motivo) => {
   fs.writeFileSync(caminho, JSON.stringify(fallback, null, 2));
@@ -298,10 +298,9 @@ const carregarConfiguracoes = () => {
     }
   );
   if (
-  !configuracoes ||
-  typeof configuracoes !== "object" ||
-  Array.isArray(configuracoes))
-  {
+    !configuracoes ||
+    typeof configuracoes !== "object" ||
+    Array.isArray(configuracoes)) {
     return {};
   }
   return configuracoes;
@@ -341,7 +340,7 @@ const carregarAntiPrivadoLista = () => {
 };
 
 const extrairNomeRegistro = (registro, fallbackNome = "") =>
-registro?.nome ?? fallbackNome;
+  registro?.nome ?? fallbackNome;
 
 const extrairDinheiroRegistro = (registro) => {
   return paraBigIntSeguro(registro?.dinheiro, ZERO_BIGINT);
@@ -394,7 +393,7 @@ if (horap >= "01" && horap <= "05") {
 }
 
 
-var {owner, API_KEY_BRONXYS, API_KEY_GEMINI, GEMINI_MODEL, targetGroup = []} = carregarConfiguracoes();
+var { owner, API_KEY_BRONXYS, API_KEY_GROQ, GROQ_MODEL, targetGroup = [] } = carregarConfiguracoes();
 
 const normalizarIdentificador = (valor) => {
   if (valor === undefined || valor === null) return "";
@@ -429,10 +428,10 @@ const adicionarIdentificadores = (set, valor) => {
 
 const ownerList = (
   Array.isArray(owner) ? owner :
-  owner === undefined || owner === null ? [] : [owner]
+    owner === undefined || owner === null ? [] : [owner]
 ).
-map((valor) => String(valor).trim()).
-filter(Boolean);
+  map((valor) => String(valor).trim()).
+  filter(Boolean);
 
 const ownerIdentifiers = new Set();
 for (const ownerId of ownerList) {
@@ -440,8 +439,8 @@ for (const ownerId of ownerList) {
 }
 
 const targetGroupsList = Array.isArray(targetGroup) ?
-targetGroup.filter((jid) => typeof jid === "string" && jid.trim()).map((jid) => jid.trim()) :
-typeof targetGroup === "string" && targetGroup.trim() ? [targetGroup.trim()] : [];
+  targetGroup.filter((jid) => typeof jid === "string" && jid.trim()).map((jid) => jid.trim()) :
+  typeof targetGroup === "string" && targetGroup.trim() ? [targetGroup.trim()] : [];
 const prefixo = ["/"];
 
 const pairingCode = true;
@@ -535,7 +534,7 @@ async function startProo() {
       output: process.stdout
     });
     const question = (text) =>
-    new Promise((resolve) => rl.question(text, resolve));
+      new Promise((resolve) => rl.question(text, resolve));
 
     let number = await question(
       chalk.cyan(
@@ -771,7 +770,7 @@ async function startProo() {
 
 
   sock.ev.on("creds.update", saveCreds);
-  sock.ev.on("messages.upsert", () => {});
+  sock.ev.on("messages.upsert", () => { });
 
   sock.ev.on("messages.upsert", async (m) => {
     console.log("Mensagem recebida de:", m.messages[0]?.key?.remoteJid);
@@ -781,51 +780,51 @@ async function startProo() {
       if (info.key && info.key.remoteJid == "status@broadcast") return;
       const altpdf = Object.keys(info.message);
       const type =
-      altpdf[0] == "senderKeyDistributionMessage" ?
-      altpdf[1] == "messageContextInfo" ?
-      altpdf[2] :
-      altpdf[1] :
-      altpdf[0];
+        altpdf[0] == "senderKeyDistributionMessage" ?
+          altpdf[1] == "messageContextInfo" ?
+            altpdf[2] :
+            altpdf[1] :
+          altpdf[0];
       const content = JSON.stringify(info.message);
       const from = info.key.remoteJid;
       var body =
-      type === "conversation" ?
-      info.message.conversation :
-      type == "imageMessage" ?
-      info.message.imageMessage.caption :
-      type == "videoMessage" ?
-      info.message.videoMessage.caption :
-      type == "extendedTextMessage" ?
-      info.message.extendedTextMessage.text :
-      type == "buttonsResponseMessage" ?
-      info.message.buttonsResponseMessage.selectedButtonId :
-      type == "listResponseMessage" ?
-      info.message.listResponseMessage.singleSelectReply.
-      selectedRowId :
-      type == "templateButtonReplyMessage" ?
-      info.message.templateButtonReplyMessage.selectedId :
-      "";
+        type === "conversation" ?
+          info.message.conversation :
+          type == "imageMessage" ?
+            info.message.imageMessage.caption :
+            type == "videoMessage" ?
+              info.message.videoMessage.caption :
+              type == "extendedTextMessage" ?
+                info.message.extendedTextMessage.text :
+                type == "buttonsResponseMessage" ?
+                  info.message.buttonsResponseMessage.selectedButtonId :
+                  type == "listResponseMessage" ?
+                    info.message.listResponseMessage.singleSelectReply.
+                      selectedRowId :
+                    type == "templateButtonReplyMessage" ?
+                      info.message.templateButtonReplyMessage.selectedId :
+                      "";
 
       if (!body) body = "";
 
       const budy =
-      type === "conversation" ?
-      info.message.conversation :
-      type === "extendedTextMessage" ?
-      info.message.extendedTextMessage.text :
-      "";
+        type === "conversation" ?
+          info.message.conversation :
+          type === "extendedTextMessage" ?
+            info.message.extendedTextMessage.text :
+            "";
 
       var pes =
-      type === "conversation" && info.message.conversation ?
-      info.message.conversation :
-      type == "imageMessage" && info.message.imageMessage.caption ?
-      info.message.imageMessage.caption :
-      type == "videoMessage" && info.message.videoMessage.caption ?
-      info.message.videoMessage.caption :
-      type == "extendedTextMessage" &&
-      info.message.extendedTextMessage.text ?
-      info.message.extendedTextMessage.text :
-      "";
+        type === "conversation" && info.message.conversation ?
+          info.message.conversation :
+          type == "imageMessage" && info.message.imageMessage.caption ?
+            info.message.imageMessage.caption :
+            type == "videoMessage" && info.message.videoMessage.caption ?
+              info.message.videoMessage.caption :
+              type == "extendedTextMessage" &&
+                info.message.extendedTextMessage.text ?
+                info.message.extendedTextMessage.text :
+                "";
 
       if (!pes) pes = "";
 
@@ -841,12 +840,12 @@ async function startProo() {
 
       const isGroup = info.key.remoteJid.endsWith("@g.us");
       const sender =
-      isGroup ?
-      info.key.participant ||
-      info.participant ||
-      info.key.participantLid ||
-      info.key.participantPn :
-      from;
+        isGroup ?
+          info.key.participant ||
+          info.participant ||
+          info.key.participantLid ||
+          info.key.participantPn :
+          from;
       const groupMetadata = isGroup ? await sock.groupMetadata(from) : "";
       const groupName = isGroup ? groupMetadata.subject : "";
       const groupDesc = isGroup ? groupMetadata.desc : "";
@@ -862,26 +861,26 @@ async function startProo() {
 
 
       const removeAccents = (str) =>
-      str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const prefixes = prefixo ?
-      prefixo.map((prefix) => prefix.toLowerCase()) :
-      [];
+        prefixo.map((prefix) => prefix.toLowerCase()) :
+        [];
       const lowerBudy = budy.toLowerCase();
       const hasPrefix = prefixes.some((prefix) => lowerBudy.startsWith(prefix));
       const commandArgs = hasPrefix ?
-      lowerBudy.
-      slice(
-        prefixes.find((prefix) => lowerBudy.startsWith(prefix)).length
-      ).
-      trim().
-      split(" ") :
-      lowerBudy.trim().split(" ");
+        lowerBudy.
+          slice(
+            prefixes.find((prefix) => lowerBudy.startsWith(prefix)).length
+          ).
+          trim().
+          split(" ") :
+        lowerBudy.trim().split(" ");
       const comando = hasPrefix ? removeAccents(commandArgs[0]) : "";
 
       const mentions = (teks, memberr, id) => {
         id == null || id == undefined || id == false ?
-        sock.sendMessage(from, { text: teks.trim(), mentions: memberr }) :
-        sock.sendMessage(from, { text: teks.trim(), mentions: memberr });
+          sock.sendMessage(from, { text: teks.trim(), mentions: memberr }) :
+          sock.sendMessage(from, { text: teks.trim(), mentions: memberr });
       };
       const quoted = info.quoted ? info.quoted : info;
       const mime = (quoted.info || quoted).Mimetype || "";
@@ -892,8 +891,8 @@ async function startProo() {
       const isBot = info.key.fromMe ? true : false;
       const senderNumber = sender ? sender.split("@")[0] : "";
       const BotNumber = sock.user?.id ?
-      sock.user.id.split(":")[0] + "@s.whatsapp.net" :
-      "";
+        sock.user.id.split(":")[0] + "@s.whatsapp.net" :
+        "";
       const senderIdentifiers = new Set();
       adicionarIdentificadores(senderIdentifiers, sender);
       adicionarIdentificadores(senderIdentifiers, info.key?.senderPn);
@@ -908,7 +907,7 @@ async function startProo() {
       }
 
       const isOwner = [...senderIdentifiers].some((id) =>
-      ownerIdentifiers.has(id)
+        ownerIdentifiers.has(id)
       );
       const isOwnerId = (jid) => {
         const ids = new Set();
@@ -924,7 +923,7 @@ async function startProo() {
       };
 
       const isGroupAdmins = groupAdmins.some((admin) =>
-      admin.id?.includes(sender)
+        admin.id?.includes(sender)
       );
       const isBotGroupAdmins = esAdminFlexible(
         sock,
@@ -963,11 +962,11 @@ async function startProo() {
         );
       };
       const deviceType =
-      info.key.id.length > 21 ?
-      "Android" :
-      info.key.id.substring(0, 2) == "3A" ?
-      "IPhone" :
-      "WhatsApp web";
+        info.key.id.length > 21 ?
+          "Android" :
+          info.key.id.substring(0, 2) == "3A" ?
+            "IPhone" :
+            "WhatsApp web";
       const options = { timeZone: "America/Lima", hour12: false };
       const data = new Date().toLocaleDateString("PE", {
         ...options,
@@ -1087,35 +1086,35 @@ async function startProo() {
       const isLocation = type == "locationMessage";
       const isProduct = type == "productMessage";
       const isMedia =
-      type === "imageMessage" ||
-      type === "videoMessage" ||
-      type === "audioMessage";
+        type === "imageMessage" ||
+        type === "videoMessage" ||
+        type === "audioMessage";
       typeMessage = body.substr(0, 50).replace(/\n/g, "");
-      if (isImage) typeMessage = "Image";else
-      if (isVideo) typeMessage = "Video";else
-      if (isAudio) typeMessage = "Audio";else
-      if (isSticker) typeMessage = "Sticker";else
-      if (isContact) typeMessage = "Contact";else
-      if (isLocation) typeMessage = "Location";else
-      if (isProduct) typeMessage = "Product";
+      if (isImage) typeMessage = "Image"; else
+        if (isVideo) typeMessage = "Video"; else
+          if (isAudio) typeMessage = "Audio"; else
+            if (isSticker) typeMessage = "Sticker"; else
+              if (isContact) typeMessage = "Contact"; else
+                if (isLocation) typeMessage = "Location"; else
+                  if (isProduct) typeMessage = "Product";
       const isQuotedMsg =
-      type === "extendedTextMessage" && content.includes("textMessage");
+        type === "extendedTextMessage" && content.includes("textMessage");
       const isQuotedImage =
-      type === "extendedTextMessage" && content.includes("imageMessage");
+        type === "extendedTextMessage" && content.includes("imageMessage");
       const isQuotedVideo =
-      type === "extendedTextMessage" && content.includes("videoMessage");
+        type === "extendedTextMessage" && content.includes("videoMessage");
       const isQuotedDocument =
-      type === "extendedTextMessage" && content.includes("documentMessage");
+        type === "extendedTextMessage" && content.includes("documentMessage");
       const isQuotedAudio =
-      type === "extendedTextMessage" && content.includes("audioMessage");
+        type === "extendedTextMessage" && content.includes("audioMessage");
       const isQuotedSticker =
-      type === "extendedTextMessage" && content.includes("stickerMessage");
+        type === "extendedTextMessage" && content.includes("stickerMessage");
       const isQuotedContact =
-      type === "extendedTextMessage" && content.includes("contactMessage");
+        type === "extendedTextMessage" && content.includes("contactMessage");
       const isQuotedLocation =
-      type === "extendedTextMessage" && content.includes("locationMessage");
+        type === "extendedTextMessage" && content.includes("locationMessage");
       const isQuotedProduct =
-      type === "extendedTextMessage" && content.includes("productMessage");
+        type === "extendedTextMessage" && content.includes("productMessage");
 
       const getFileBuffer = async (mediakey, MediaType) => {
         const stream = await downloadContentFromMessage(mediakey, MediaType);
@@ -1130,9 +1129,9 @@ async function startProo() {
 
       const obterMencionado = (info) => {
         const context =
-        info.message?.extendedTextMessage?.contextInfo ||
-        info.message?.contextInfo ||
-        null;
+          info.message?.extendedTextMessage?.contextInfo ||
+          info.message?.contextInfo ||
+          null;
 
         if (context?.mentionedJid && context.mentionedJid.length > 0) {
           return context.mentionedJid[0];
@@ -1165,7 +1164,7 @@ async function startProo() {
         if (remainingSeconds > 0) {
           parts.push(
             remainingSeconds + (
-            remainingSeconds === 1 ? " segundo" : " segundos")
+              remainingSeconds === 1 ? " segundo" : " segundos")
           );
         }
         return parts.join(", ");
@@ -1211,110 +1210,110 @@ async function startProo() {
 
 
       if (!isGroup && isCmd)
-      console.log(
-        "\n  ╔─━━━━ ",
-        color("COMANDO", "blue"),
-        "━━━━─╗",
-        "\n",
-        color(" GRUPO :", "lime"),
-        color(groupName, "cyan"),
-        "\n",
-        color(" NOME :", "lime"),
-        color(pushname, "cyan"),
-        "\n",
-        color(" COMANDO :", "lime"),
-        color(comando, "cyan"),
-        "\n",
-        color(" HORA :", "lime"),
-        color(hora, "cyan"),
-        "\n",
-        color(" DATA : ", "lime"),
-        color(data, "cyan"),
-        "\n",
-        color(" ╚─━━━━ "),
-        color("COMANDO", "red"),
-        "━━━━━─╝"
-      );
+        console.log(
+          "\n  ╔─━━━━ ",
+          color("COMANDO", "blue"),
+          "━━━━─╗",
+          "\n",
+          color(" GRUPO :", "lime"),
+          color(groupName, "cyan"),
+          "\n",
+          color(" NOME :", "lime"),
+          color(pushname, "cyan"),
+          "\n",
+          color(" COMANDO :", "lime"),
+          color(comando, "cyan"),
+          "\n",
+          color(" HORA :", "lime"),
+          color(hora, "cyan"),
+          "\n",
+          color(" DATA : ", "lime"),
+          color(data, "cyan"),
+          "\n",
+          color(" ╚─━━━━ "),
+          color("COMANDO", "red"),
+          "━━━━━─╝"
+        );
 
 
       if (!isCmd && !isGroup)
-      console.log(
-        "\n  ╔─━━━━━",
-        color(" PV ", "blue"),
-        "━━━━━─╗",
-        "\n",
-        color(" GRUPO :", "lime"),
-        color(groupName, "cyan"),
-        "\n",
-        color(" NOME :", "lime"),
-        color(pushname, "cyan"),
-        "\n",
-        color(" MENSAGEM :", "lime"),
-        color(budy, "cyan"),
-        "\n",
-        color(" HORA :", "lime"),
-        color(hora, "cyan"),
-        "\n",
-        color(" DATA :", "lime"),
-        color(data, "cyan"),
-        "\n",
-        color(" ╚─━━━━━ "),
-        color("PV", "red"),
-        "━━━━━─╝"
-      );
+        console.log(
+          "\n  ╔─━━━━━",
+          color(" PV ", "blue"),
+          "━━━━━─╗",
+          "\n",
+          color(" GRUPO :", "lime"),
+          color(groupName, "cyan"),
+          "\n",
+          color(" NOME :", "lime"),
+          color(pushname, "cyan"),
+          "\n",
+          color(" MENSAGEM :", "lime"),
+          color(budy, "cyan"),
+          "\n",
+          color(" HORA :", "lime"),
+          color(hora, "cyan"),
+          "\n",
+          color(" DATA :", "lime"),
+          color(data, "cyan"),
+          "\n",
+          color(" ╚─━━━━━ "),
+          color("PV", "red"),
+          "━━━━━─╝"
+        );
 
 
       if (isCmd && isGroup)
-      console.log(
-        "\n  ╔─━━━━ ",
-        color("COMANDO", "blue"),
-        "━━━━─╗",
-        color(" GRUPO :", "lime"),
-        color(groupName, "cyan"),
-        "\n",
-        color(" NOME :", "lime"),
-        color(pushname, "cyan"),
-        "\n",
-        color(" COMANDO :", "lime"),
-        color(comando, "cyan"),
-        "\n",
-        color(" HORA :", "lime"),
-        color(hora, "cyan"),
-        "\n",
-        color(" DATA :", "lime"),
-        color(data, "cyan"),
-        "\n",
-        color(" ╚─━━━━ "),
-        color("COMANDO", "red"),
-        "━━━━━─╝"
-      );
+        console.log(
+          "\n  ╔─━━━━ ",
+          color("COMANDO", "blue"),
+          "━━━━─╗",
+          color(" GRUPO :", "lime"),
+          color(groupName, "cyan"),
+          "\n",
+          color(" NOME :", "lime"),
+          color(pushname, "cyan"),
+          "\n",
+          color(" COMANDO :", "lime"),
+          color(comando, "cyan"),
+          "\n",
+          color(" HORA :", "lime"),
+          color(hora, "cyan"),
+          "\n",
+          color(" DATA :", "lime"),
+          color(data, "cyan"),
+          "\n",
+          color(" ╚─━━━━ "),
+          color("COMANDO", "red"),
+          "━━━━━─╝"
+        );
 
 
       if (!isCmd && isGroup)
-      console.log(
-        "\n  ╔─━━━━ ",
-        color("GRUPO", "blue"),
-        "━━━━─╗",
-        "\n",
-        color(" GRUPO :", "lime"),
-        color(groupName, "cyan"),
-        "\n",
-        color(" NOME :", "lime"),
-        color(pushname, "cyan"),
-        "\n",
-        color(" MENSAGEM :", "lime"),
-        color(budy, "cyan"),
-        "\n",
-        color(" HORA :", "lime"),
-        color(hora, "cyan"),
-        "\n",
-        color(" DATA :", "lime"),
-        color(data, "cyan"),
-        "\n",
-        color(" ╚─━━━━ "),
-        color("GRUPO", "red"),
-        "━━━━━─╝"
-      );
+        console.log(
+          "\n  ╔─━━━━ ",
+          color("GRUPO", "blue"),
+          "━━━━─╗",
+          "\n",
+          color(" GRUPO :", "lime"),
+          color(groupName, "cyan"),
+          "\n",
+          color(" NOME :", "lime"),
+          color(pushname, "cyan"),
+          "\n",
+          color(" MENSAGEM :", "lime"),
+          color(budy, "cyan"),
+          "\n",
+          color(" HORA :", "lime"),
+          color(hora, "cyan"),
+          "\n",
+          color(" DATA :", "lime"),
+          color(data, "cyan"),
+          "\n",
+          color(" ╚─━━━━ "),
+          color("GRUPO", "red"),
+          "━━━━━─╝"
+        );
 
       expiredClaim();
       limparExpiradosMineracao();
@@ -1326,8 +1325,8 @@ async function startProo() {
       limparExpiradosRoleta();
 
       const whitelistGroups = [
-      "120363406690153385@g.us",
-      "120363422859824170@g.us"];
+        "120363406690153385@g.us",
+        "120363422859824170@g.us"];
 
       if (isBanGp && !whitelistGroups.includes(from)) {
         return;
@@ -1383,13 +1382,13 @@ async function startProo() {
             if (!isOwner) return enviar(respostasSistema.somenteCriador);
             if (args[0] === "on") {
               if (antiPrivadoAtivo)
-              return enviar("O anti-privado já está ativo");
+                return enviar("O anti-privado já está ativo");
               antiPrivadoLista.push("ativo");
               salvarJsonSeguro(CAMINHO_CHAT, antiPrivadoLista);
               enviar("Anti-privado ativado com sucesso");
             } else if (args[0] === "off") {
               if (!antiPrivadoAtivo)
-              return enviar("O anti-privado já estava desativado");
+                return enviar("O anti-privado já estava desativado");
               const indiceAtivo = antiPrivadoLista.indexOf("ativo");
               if (indiceAtivo !== -1) {
                 antiPrivadoLista.splice(indiceAtivo, 1);
@@ -1407,21 +1406,21 @@ async function startProo() {
         case "open":
           try {
             var vio =
-            info.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+              info.message?.extendedTextMessage?.contextInfo?.quotedMessage;
             var viewImage =
-            vio?.imageMessage ||
-            info.message?.imageMessage ||
-            vio?.viewOnceMessageV2?.message?.imageMessage ||
-            info.message?.viewOnceMessageV2?.message?.imageMessage ||
-            info.message?.viewOnceMessage?.message?.imageMessage ||
-            vio?.viewOnceMessage?.message?.imageMessage;
+              vio?.imageMessage ||
+              info.message?.imageMessage ||
+              vio?.viewOnceMessageV2?.message?.imageMessage ||
+              info.message?.viewOnceMessageV2?.message?.imageMessage ||
+              info.message?.viewOnceMessage?.message?.imageMessage ||
+              vio?.viewOnceMessage?.message?.imageMessage;
             var viewVideo =
-            vio?.videoMessage ||
-            info.message?.videoMessage ||
-            vio?.viewOnceMessageV2?.message?.videoMessage ||
-            info.message?.viewOnceMessageV2?.message?.videoMessage ||
-            info.message?.viewOnceMessage?.message?.videoMessage ||
-            vio?.viewOnceMessage?.message?.videoMessage;
+              vio?.videoMessage ||
+              info.message?.videoMessage ||
+              vio?.viewOnceMessageV2?.message?.videoMessage ||
+              info.message?.viewOnceMessageV2?.message?.videoMessage ||
+              info.message?.viewOnceMessage?.message?.videoMessage ||
+              vio?.viewOnceMessage?.message?.videoMessage;
 
             if (JSON.stringify(info).includes("videoMessage")) {
               viewVideo.viewOnce = false;
@@ -1539,7 +1538,7 @@ async function startProo() {
         case "everyone":
           {
             if (!isGroup)
-            return enviar("É sério invocar em um chat, seu tio te pegou né");
+              return enviar("É sério invocar em um chat, seu tio te pegou né");
             if (!isGroupAdmins) return enviar(respostasSistema.admin);
             men = [];
             num = 0;
@@ -1557,11 +1556,11 @@ async function startProo() {
         case "modoadm":
           {
             if (!isGroup)
-            return enviar("Este comando só pode ser usado em grupos");
+              return enviar("Este comando só pode ser usado em grupos");
             if (!isGroupAdmins)
-            return enviar(
-              "Apenas os administradores podem alterar este modo"
-            );
+              return enviar(
+                "Apenas os administradores podem alterar este modo"
+              );
 
             const JsonModoAdmin = "./settings/Grupo/Json/modo_admin.json";
             let modoAdmin = lerJsonSeguro(JsonModoAdmin, [], {
@@ -1571,9 +1570,9 @@ async function startProo() {
             const estado = args[0];
 
             if (!estado)
-            return enviar(
-              "*modoadm 1* → Ativar modo admin\n*modoadm 0* → Desativar modo admin"
-            );
+              return enviar(
+                "*modoadm 1* → Ativar modo admin\n*modoadm 0* → Desativar modo admin"
+              );
 
             if (estado === "1") {
               if (!modoAdmin.includes(from)) {
@@ -1613,9 +1612,9 @@ async function startProo() {
           if (!isGroupAdmins) return enviar(respostasSistema.admin);
           if (!q) return enviar("Digite um texto");
           if (!isGroup)
-          return enviartexto("Este comando só pode ser usado em grupos");
+            return enviartexto("Este comando só pode ser usado em grupos");
           if (!isGroupAdmins)
-          return enviartexto("O bot precisa ser administrador");
+            return enviartexto("O bot precisa ser administrador");
           var group = await sock.groupMetadata(from);
           var member = group["participants"];
           var mem = [];
@@ -1639,12 +1638,12 @@ async function startProo() {
             let mentioned = obterMencionado(info);
 
             if (!mentioned)
-            return enviar(
-              "Você deve mencionar alguém para usar este comando"
-            );
+              return enviar(
+                "Você deve mencionar alguém para usar este comando"
+              );
 
             if (mentioned === BotNumber || isOwnerId(mentioned))
-            return enviar("Não");
+              return enviar("Não");
             await sock.groupParticipantsUpdate(from, [mentioned], "remove");
             enviar("Ação realizada com sucesso");
           }
@@ -1656,21 +1655,21 @@ async function startProo() {
         case "figurinha":
           if (!isReg) return enviar(respostasSistema.registro);
           var RSM =
-          info.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+            info.message?.extendedTextMessage?.contextInfo?.quotedMessage;
           var boij2 =
-          RSM?.imageMessage ||
-          info.message?.imageMessage ||
-          RSM?.viewOnceMessageV2?.message?.imageMessage ||
-          info.message?.viewOnceMessageV2?.message?.imageMessage ||
-          info.message?.viewOnceMessage?.message?.imageMessage ||
-          RSM?.viewOnceMessage?.message?.imageMessage;
+            RSM?.imageMessage ||
+            info.message?.imageMessage ||
+            RSM?.viewOnceMessageV2?.message?.imageMessage ||
+            info.message?.viewOnceMessageV2?.message?.imageMessage ||
+            info.message?.viewOnceMessage?.message?.imageMessage ||
+            RSM?.viewOnceMessage?.message?.imageMessage;
           var boij =
-          RSM?.videoMessage ||
-          info.message?.videoMessage ||
-          RSM?.viewOnceMessageV2?.message?.videoMessage ||
-          info.message?.viewOnceMessageV2?.message?.videoMessage ||
-          info.message?.viewOnceMessage?.message?.videoMessage ||
-          RSM?.viewOnceMessage?.message?.videoMessage;
+            RSM?.videoMessage ||
+            info.message?.videoMessage ||
+            RSM?.viewOnceMessageV2?.message?.videoMessage ||
+            info.message?.viewOnceMessageV2?.message?.videoMessage ||
+            info.message?.viewOnceMessage?.message?.videoMessage ||
+            RSM?.viewOnceMessage?.message?.videoMessage;
           if (boij2) {
             var pack = `ㅤ`;
             var author2 = ` ㅤ`;
@@ -1707,7 +1706,7 @@ async function startProo() {
             if (!q.trim()) return enviar(`Escreva o texto que você quiser`);
 
             var Fontes =
-            commandArgs === "attp2" ? "Roboto" : "Noto Emoji, Noto Sans Mono";
+              commandArgs === "attp2" ? "Roboto" : "Noto Emoji, Noto Sans Mono";
 
             let axios = require("axios");
             let res = await axios.get(
@@ -1736,7 +1735,7 @@ async function startProo() {
           if (!isQuotedVideo) return enviar(`Marque um vídeo `);
           tomp = await getFileBuffer(
             info.message.extendedTextMessage.contextInfo.quotedMessage.
-            videoMessage,
+              videoMessage,
             "video"
           );
           sock.sendMessage(
@@ -1754,24 +1753,24 @@ async function startProo() {
           try {
             buff = await getFileBuffer(
               info.message.extendedTextMessage.contextInfo.quotedMessage.
-              stickerMessage,
+                stickerMessage,
               "sticker"
             );
             sock.
-            sendMessage(
-              from,
-              {
-                image: buff,
-                caption: ` [❗] *${pushname}*, Aqui está seu pedido `
-              },
-              { quoted: info }
-            ).
-            catch((e) => {
-              console.log(e);
-              enviar(
-                "Não foi possível converter, verifique se é uma imagem e não um gif"
-              );
-            });
+              sendMessage(
+                from,
+                {
+                  image: buff,
+                  caption: ` [❗] *${pushname}*, Aqui está seu pedido `
+                },
+                { quoted: info }
+              ).
+              catch((e) => {
+                console.log(e);
+                enviar(
+                  "Não foi possível converter, verifique se é uma imagem e não um gif"
+                );
+              });
             await adicionarXp(sender, 3);
             await removerMoedas(sender, 2);
           } catch {
@@ -1810,38 +1809,38 @@ async function startProo() {
           break;
 
         case "ia":
-        case "gemini":
+        case "groq":
           if (!q || !q.trim()) return enviar("Envie sua pergunta");
-
-          const apiKey = API_KEY_GEMINI;
-
-          const modelName = GEMINI_MODEL;
-
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
           const fazerRequisicao = async (tentativa = 1) => {
             try {
-              const response = await fetch(url, {
+              const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: [{ parts: [{ text: q }] }] })
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${API_KEY_GROQ}`
+                },
+                body: JSON.stringify({
+                  model: GROQ_MODEL,
+                  messages: [{ role: "user", content: q }]
+                })
               });
 
               const data = await response.json();
 
-              if (response.status === 503) {
+              if (response.status === 503 || response.status === 429) {
                 if (tentativa < 3) {
                   await new Promise((resolve) => setTimeout(resolve, 2000));
                   return fazerRequisicao(tentativa + 1);
                 } else {
-                  throw new Error("Erro");
+                  throw new Error("Erro: serviço indisponível");
                 }
               }
 
               if (!response.ok)
-              throw new Error(data.error?.message || "Erro desconhecido");
+                throw new Error(data.error?.message || "Erro desconhecido");
 
-              return data.candidates[0].content.parts[0].text;
+              return data.choices[0].message.content;
             } catch (err) {
               throw err;
             }
@@ -1858,29 +1857,28 @@ async function startProo() {
 
         case "debug":
           try {
-            const apiKey = API_KEY_GEMINI;
-
             const response = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+              "https://api.groq.com/openai/v1/models",
+              {
+                headers: { "Authorization": `Bearer ${API_KEY_GROQ}` }
+              }
             );
             const data = await response.json();
 
-            if (!data.models) {
+            if (!data.data) {
               return enviar(
-                "A API respondeu, mas não veio lista de modelos." +
+                "A API respondeu, mas não veio lista de modelos. " +
                 JSON.stringify(data)
               );
             }
 
-            const modelosUteis = data.models.
-            filter((m) =>
-            m.supportedGenerationMethods.includes("generateContent")
-            ).
-            map((m) => m.name.replace("models/", "")).
-            join("\n");
+            const modelosUteis = data.data
+              .map((m) => m.id)
+              .sort()
+              .join("\n");
 
             enviar(
-              `📋 *MODELOS DISPONÍVEIS NA SUA CONTA:*\n\n${modelosUteis}`
+              `📋 *MODELOS DISPONÍVEIS (GROQ):*\n\n${modelosUteis}\n\n⚙️ Modelo atual: *${GROQ_MODEL}*`
             );
           } catch (err) {
             console.error(err);
@@ -1952,12 +1950,12 @@ Progresso:
             valorDep = paraBigIntSeguro(moedasDoRemetente(sender), ZERO_BIGINT);
           } else {
             if (!validarInteiro(q))
-            return enviar("⚠️ Digite um valor inteiro válido.");
+              return enviar("⚠️ Digite um valor inteiro válido.");
             valorDep = paraBigIntSeguro(q, ZERO_BIGINT);
           }
 
           if (valorDep <= ZERO_BIGINT)
-          return enviar("⚠️ O valor deve ser maior que zero.");
+            return enviar("⚠️ O valor deve ser maior que zero.");
           if (paraBigIntSeguro(moedasDoRemetente(sender), ZERO_BIGINT) < valorDep) {
             return enviar("❌ Você não tem Bitcoins suficientes na carteira.");
           }
@@ -1988,14 +1986,14 @@ Progresso:
             valorSac = saldoPoup;
           } else {
             if (!validarInteiro(q))
-            return enviar("⚠️ Digite um valor inteiro válido.");
+              return enviar("⚠️ Digite um valor inteiro válido.");
             valorSac = paraBigIntSeguro(q, ZERO_BIGINT);
           }
 
           if (valorSac <= ZERO_BIGINT)
-          return enviar("⚠️ O valor deve ser maior que zero.");
+            return enviar("⚠️ O valor deve ser maior que zero.");
           if (saldoPoup < valorSac)
-          return enviar("❌ Você não tem Bitcoins suficientes na poupança.");
+            return enviar("❌ Você não tem Bitcoins suficientes na poupança.");
 
           await removerPoupanca(sender, valorSac);
           await adicionarMoedas(sender, valorSac);
@@ -2026,12 +2024,12 @@ Progresso:
 
         case "tigrinho":
           if (!isReg)
-          return enviar("Você deve se registrar para jogar, digite /reg");
+            return enviar("Você deve se registrar para jogar, digite /reg");
           if (!q) return enviar(respostasSistema.escolhaValor);
           if (!validarInteiro(q))
-          return enviar(
-            "⚠️ Por favor, insira um número inteiro válido maior que zero."
-          );
+            return enviar(
+              "⚠️ Por favor, insira um número inteiro válido maior que zero."
+            );
           const saldo = paraBigIntSeguro(moedasDoRemetente(sender), ZERO_BIGINT);
           const valorApostado = paraBigIntSeguro(q, ZERO_BIGINT);
           const apostas = valorApostado;
@@ -2039,7 +2037,7 @@ Progresso:
           const tempoGuardado = tempoCooldownCacaNiqueis(sender) || 0;
           const tempoRestante = tempoGuardado - agora;
           if (valorApostado <= ZERO_BIGINT)
-          return enviar("⚠️ O valor deve ser maior que zero.");
+            return enviar("⚠️ O valor deve ser maior que zero.");
           if (valorApostado > saldo) return enviar("SALDO INSUFICIENTE!");
 
           if (tempoRestante > 0) {
@@ -2056,23 +2054,23 @@ Progresso:
 
 
           const simbolos = [
-          "🥕",
-          "🐰",
-          "🐸",
-          "🦊",
-          "🐱",
-          "🍋",
-          "🔔",
-          "🍒",
-          "🍉",
-          "🍌"];
+            "🥕",
+            "🐰",
+            "🐸",
+            "🦊",
+            "🐱",
+            "🍋",
+            "🔔",
+            "🍒",
+            "🍉",
+            "🍌"];
 
 
 
           const obterLinha = () => [
-          simbolos[Math.floor(Math.random() * simbolos.length)],
-          simbolos[Math.floor(Math.random() * simbolos.length)],
-          simbolos[Math.floor(Math.random() * simbolos.length)]];
+            simbolos[Math.floor(Math.random() * simbolos.length)],
+            simbolos[Math.floor(Math.random() * simbolos.length)],
+            simbolos[Math.floor(Math.random() * simbolos.length)]];
 
 
 
@@ -2085,7 +2083,7 @@ Progresso:
 
           if (probabilidade < 0.65) {
             const simboloVencedor =
-            simbolos[Math.floor(Math.random() * simbolos.length)];
+              simbolos[Math.floor(Math.random() * simbolos.length)];
             filaCentro = [simboloVencedor, simboloVencedor, simboloVencedor];
           } else {
             filaCentro = obterLinha();
@@ -2093,16 +2091,16 @@ Progresso:
 
 
           const vencedor =
-          filaCentro[0] === filaCentro[1] && filaCentro[1] === filaCentro[2];
+            filaCentro[0] === filaCentro[1] && filaCentro[1] === filaCentro[2];
 
           let mensagemResultado =
-          "Você perdeu... tente novamente em 10 segundos.";
+            "Você perdeu... tente novamente em 10 segundos.";
           let premioTexto = "";
 
 
           if (vencedor) {
             const quantidadePremio =
-            randomBigIntAbaixo(valorApostado) + valorApostado * 2n;
+              randomBigIntAbaixo(valorApostado) + valorApostado * 2n;
             const tipoPremio = Math.random() < 0.8 ? "coins" : "exp";
 
             if (tipoPremio === "coins") {
@@ -2437,28 +2435,28 @@ ${vit}
         case "pix":
           {
             if (!isGroup)
-            return enviar("⚠️ Este comando só pode ser usado em grupos.");
+              return enviar("⚠️ Este comando só pode ser usado em grupos.");
             try {
               const mencionado = obterMencionado(info);
               const remetente = sender;
               const valor = paraBigIntSeguro(args[1], ZERO_BIGINT);
 
               if (!mencionado)
-              return enviar(
-                "⚠️ Você deve mencionar alguém para fazer o pix."
-              );
+                return enviar(
+                  "⚠️ Você deve mencionar alguém para fazer o pix."
+                );
               if (mencionado === remetente)
-              return enviar("⚠️ Você não pode enviar um pix para si mesmo.");
+                return enviar("⚠️ Você não pode enviar um pix para si mesmo.");
               if (!validarInteiro(args[1]))
-              return enviar(
-                "⚠️ Por favor, insira um número inteiro válido maior que zero."
-              );
+                return enviar(
+                  "⚠️ Por favor, insira um número inteiro válido maior que zero."
+                );
 
               const saldoRemetente = await moedasDoUsuario(remetente);
               if (saldoRemetente < valor)
-              return enviar(
-                "❌ Você não tem moedas suficientes para fazer esta transferência."
-              );
+                return enviar(
+                  "❌ Você não tem moedas suficientes para fazer esta transferência."
+                );
 
 
               await removerMoedas(remetente, valor);
@@ -2484,9 +2482,9 @@ ${vit}
 
               if (!mencionado) return enviar("⚠️ Você deve mencionar alguém.");
               if (!validarInteiro(args[1]))
-              return enviar(
-                "⚠️ Por favor, insira um número inteiro válido maior que zero."
-              );
+                return enviar(
+                  "⚠️ Por favor, insira um número inteiro válido maior que zero."
+                );
 
               await adicionarMoedas(mencionado, valor);
               await sleep(100);
@@ -2507,9 +2505,9 @@ ${vit}
 
               if (!mencionado) return enviar("⚠️ Você deve mencionar alguém.");
               if (!validarInteiro(args[1]))
-              return enviar(
-                "⚠️ Por favor, insira um número inteiro válido maior que zero."
-              );
+                return enviar(
+                  "⚠️ Por favor, insira um número inteiro válido maior que zero."
+                );
 
               await removerMoedas(mencionado, valor);
               await sleep(100);
@@ -2534,23 +2532,22 @@ ${vit}
 
 
             const rankingArray = Array.isArray(registro) ?
-            registro.map((usuario) => normalizarRegistroEconomia(usuario)) :
-            Object.entries(registro).map(([jid, data]) =>
-            normalizarRegistroEconomia(data, jid.split("@")[0])
-            );
+              registro.map((usuario) => normalizarRegistroEconomia(usuario)) :
+              Object.entries(registro).map(([jid, data]) =>
+                normalizarRegistroEconomia(data, jid.split("@")[0])
+              );
 
             rankingArray.
-            sort((a, b) => {
-              if (b.total > a.total) return 1;
-              if (b.total < a.total) return -1;
-              return 0;
-            }).
-            slice(0, 10).
-            forEach((usuario, index) => {
-              mensagemRanking += `• ${index + 1}. *${usuario.nome}* => ${
-              formatarMoeda(usuario.total)}₿_\n`;
+              sort((a, b) => {
+                if (b.total > a.total) return 1;
+                if (b.total < a.total) return -1;
+                return 0;
+              }).
+              slice(0, 10).
+              forEach((usuario, index) => {
+                mensagemRanking += `• ${index + 1}. *${usuario.nome}* => ${formatarMoeda(usuario.total)}₿_\n`;
 
-            });
+              });
 
             enviar(mensagemRanking);
           }
@@ -2562,12 +2559,11 @@ ${vit}
             let teks = `*RANKING DE NÍVEL* :
 Pos.  User   Nível\n`;
             registro.
-            sort((a, b) => b.nivel - a.nivel).
-            forEach((usuario, index) => {
-              teks += `• ${index + 1}.     *${extrairNomeRegistro(usuario)}*  =>  _*${
-              usuario.nivel}*_\n`;
+              sort((a, b) => b.nivel - a.nivel).
+              forEach((usuario, index) => {
+                teks += `• ${index + 1}.     *${extrairNomeRegistro(usuario)}*  =>  _*${usuario.nivel}*_\n`;
 
-            });
+              });
             enviar(teks);
           }
           break;
@@ -2576,9 +2572,9 @@ Pos.  User   Nível\n`;
         case "play":
         case "p":
           if (!q)
-          return enviar(
-            `Exemplo: !play nome da música\nA música será baixada, Se não baixar, é possível que o YouTube tenha restringido o download`
-          );
+            return enviar(
+              `Exemplo: !play nome da música\nA música será baixada, Se não baixar, é possível que o YouTube tenha restringido o download`
+            );
           try {
 
             const response = await axios.get(
@@ -2594,9 +2590,9 @@ Pos.  User   Nível\n`;
 
 
             if (data[0]?.tempo?.length >= 7)
-            return enviar(
-              "Desculpe, este vídeo ou áudio é muito longo, não posso realizar esta solicitação. Peça outra música com menos de uma hora."
-            );
+              return enviar(
+                "Desculpe, este vídeo ou áudio é muito longo, não posso realizar esta solicitação. Peça outra música com menos de uma hora."
+              );
 
 
             const N_E = " Não encontrado.";
@@ -2619,20 +2615,20 @@ Pos.  User   Nível\n`;
 
 
             await sock.
-            sendMessage(
-              from,
-              {
-                audio: {
-                  url: `https://api.bronxyshost.com.br/api-bronxys/play?nome_url=${q}&apikey=${API_KEY_BRONXYS}`
+              sendMessage(
+                from,
+                {
+                  audio: {
+                    url: `https://api.bronxyshost.com.br/api-bronxys/play?nome_url=${q}&apikey=${API_KEY_BRONXYS}`
+                  },
+                  mimetype: "audio/mpeg",
+                  fileName: data[0]?.titulo || "play.mp3"
                 },
-                mimetype: "audio/mpeg",
-                fileName: data[0]?.titulo || "play.mp3"
-              },
-              { quoted: info }
-            ).
-            catch((e) => {
-              return enviar("Error...");
-            });
+                { quoted: info }
+              ).
+              catch((e) => {
+                return enviar("Error...");
+              });
           } catch (e) {
             console.log(e);
             return enviar("Não foi possível encontrar / Erro");
@@ -2646,9 +2642,9 @@ Pos.  User   Nível\n`;
           {
             try {
               if (!q.trim())
-              return enviar(
-                `- Exemplo: !play nome da música\nSe não baixar, é possível que o YouTube tenha restringido o download ou haja algum outro problema.`
-              );
+                return enviar(
+                  `- Exemplo: !play nome da música\nSe não baixar, é possível que o YouTube tenha restringido o download ou haja algum outro problema.`
+                );
 
 
               let data = await fetchJson(
@@ -2656,9 +2652,9 @@ Pos.  User   Nível\n`;
               );
 
               if (data[0]?.tempo?.length >= 7)
-              return enviar(
-                "Desculpe, este vídeo ou áudio é muito longo. Não posso processar esta solicitação. Por favor, escolha outra música que dure menos de uma hora."
-              );
+                return enviar(
+                  "Desculpe, este vídeo ou áudio é muito longo. Não posso processar esta solicitação. Por favor, escolha outra música que dure menos de uma hora."
+                );
 
               var N_E = " Não encontrado.";
               var bla = `Título: ${data[0]?.titulo || N_E}
@@ -2680,20 +2676,20 @@ Pos.  User   Nível\n`;
 
 
               sock.
-              sendMessage(
-                from,
-                {
-                  video: {
-                    url: `https://api.bronxyshost.com.br/api-bronxys/play_video?nome_url=${q}&apikey=${API_KEY_BRONXYS}`
+                sendMessage(
+                  from,
+                  {
+                    video: {
+                      url: `https://api.bronxyshost.com.br/api-bronxys/play_video?nome_url=${q}&apikey=${API_KEY_BRONXYS}`
+                    },
+                    mimetype: "video/mp4",
+                    fileName: data[0]?.titulo || "play.mp4"
                   },
-                  mimetype: "video/mp4",
-                  fileName: data[0]?.titulo || "play.mp4"
-                },
-                { quoted: info }
-              ).
-              catch((e) => {
-                return enviar("Erro ao tentar baixar o vídeo.");
-              });
+                  { quoted: info }
+                ).
+                catch((e) => {
+                  return enviar("Erro ao tentar baixar o vídeo.");
+                });
             } catch (e) {
               console.log(e);
               return enviar("Não foi possível encontrar / Erro");
@@ -2705,7 +2701,7 @@ Pos.  User   Nível\n`;
         case "tiktokvideo":
           try {
             if (!q)
-            return enviar("Por favor, forneça um link do TikTok válido.");
+              return enviar("Por favor, forneça um link do TikTok válido.");
 
             enviar("Baixando o vídeo...");
 
@@ -2741,23 +2737,23 @@ Pos.  User   Nível\n`;
         case "tiktokaudio":
           try {
             if (!q.includes("tiktok"))
-            return enviar(`!tiktokaudio link de Tiktok`);
+              return enviar(`!tiktokaudio link de Tiktok`);
             enviar("Realizando ação..");
             sock.
-            sendMessage(
-              from,
-              {
-                audio: {
-                  url: `https://api.bronxyshost.com.br/api-bronxys/tiktok?url=${q}&apikey=${API_KEY_BRONXYS}`
+              sendMessage(
+                from,
+                {
+                  audio: {
+                    url: `https://api.bronxyshost.com.br/api-bronxys/tiktok?url=${q}&apikey=${API_KEY_BRONXYS}`
+                  },
+                  mimetype: "audio/mpeg"
                 },
-                mimetype: "audio/mpeg"
-              },
-              { quoted: info }
-            ).
-            catch((e) => {
-              console.log(e);
-              return enviar("Erro..");
-            });
+                { quoted: info }
+              ).
+              catch((e) => {
+                console.log(e);
+                return enviar("Erro..");
+              });
           } catch (e) {
             console.log(e);
             return enviar("Erro...");
@@ -2784,25 +2780,25 @@ Pos.  User   Nível\n`;
 
         case "baixarapk":
           if (!q.trim().includes("aptoide.com"))
-          return enviar(
-            `Exemplo: /baixarapk link do aplicativo\n\nUse o comando /buscarapk Exemplo: whatsapp, e você receberá uma url, cole a url depois do comando para baixá-la.`
-          );
+            return enviar(
+              `Exemplo: /baixarapk link do aplicativo\n\nUse o comando /buscarapk Exemplo: whatsapp, e você receberá uma url, cole a url depois do comando para baixá-la.`
+            );
           enviar("Enviando apk...");
           try {
             abc = await fetchJson(
               `https://api.bronxyshost.com.br/api-bronxys/aptoide?url=${q.trim()}&apikey=${API_KEY_BRONXYS}`
             );
             sock.
-            sendMessage(
-              from,
-              {
-                document: { url: abc.link },
-                mimetype: "application/vnd.android.package-archive",
-                fileName: abc.titulo
-              },
-              { quoted: info }
-            ).
-            catch((e) => console.log(e));
+              sendMessage(
+                from,
+                {
+                  document: { url: abc.link },
+                  mimetype: "application/vnd.android.package-archive",
+                  fileName: abc.titulo
+                },
+                { quoted: info }
+              ).
+              catch((e) => console.log(e));
           } catch (e) {
             console.log(e);
             return enviar("Erro...");
@@ -2853,7 +2849,7 @@ Pos.  User   Nível\n`;
             const lbState = getLootboxState();
             lbState.active = true;
             lbState.amount =
-            Math.floor(Math.random() * (500000 - 10000 + 1)) + 10000;
+              Math.floor(Math.random() * (500000 - 10000 + 1)) + 10000;
             saveLootboxState(lbState);
 
             const msgLoot = `🎁 *LOOTBOX DISPONÍVEL!* 🎁\n\n💰 Valor: *???₿*\n🏃‍♂️ Digite */resgatar* rápido para pegar!`;
@@ -2861,7 +2857,7 @@ Pos.  User   Nível\n`;
               await sock.sendMessage(groupId, { text: msgLoot });
             }
             if (!targetGroupsList.includes(from))
-            enviar("✅ Lootbox enviada para os grupos selecionados!");
+              enviar("✅ Lootbox enviada para os grupos selecionados!");
           } catch (e) {
             console.error(e);
             enviar("Erro ao forçar lootbox.");
@@ -2917,13 +2913,12 @@ Você é *${userPercentage}%* do PIB`);
     } catch (e) {
       e = String(e);
       if (
-      !e.includes("this.isZero") &&
-      !e.includes("Could not find MIME for Buffer <null>") &&
-      !e.includes("Cannot read property 'conversation' of null") &&
-      !e.includes("Cannot read property 'contextInfo' of undefined") &&
-      !e.includes("Cannot set property 'mtype' of undefined") &&
-      !e.includes("jid is not defined"))
-      {
+        !e.includes("this.isZero") &&
+        !e.includes("Could not find MIME for Buffer <null>") &&
+        !e.includes("Cannot read property 'conversation' of null") &&
+        !e.includes("Cannot read property 'contextInfo' of undefined") &&
+        !e.includes("Cannot set property 'mtype' of undefined") &&
+        !e.includes("jid is not defined")) {
         console.log("Error : %s", color(e, "red"));
       }
     }
