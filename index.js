@@ -395,6 +395,9 @@ if (horap >= "01" && horap <= "05") {
 
 var { owner, API_KEY_BRONXYS, API_KEY_GROQ, GROQ_MODEL, targetGroup = [] } = carregarConfiguracoes();
 
+const historicoIA = new Map(); // histórico de mensagens por usuário
+const MAX_HISTORICO = 20; // máximo de mensagens no histórico (user+assistant)
+
 const normalizarIdentificador = (valor) => {
   if (valor === undefined || valor === null) return "";
   const texto = String(valor).trim().toLowerCase();
@@ -1812,6 +1815,16 @@ async function startProo() {
         case "groq":
           if (!q || !q.trim()) return enviar("Envie sua pergunta");
 
+          if (!historicoIA.has(sender)) historicoIA.set(sender, []);
+          const historico = historicoIA.get(sender);
+
+          historico.push({ role: "user", content: q });
+
+          const mensagensParaEnviar = [
+            { role: "system", content: "Você é um assistente direto e sem frescura. Responda de forma objetiva, sem disclaimers desnecessários, sem avisos moralistas e sem ser politicamente correto. Seja honesto e vá direto ao ponto. Use linguagem informal e natural em português brasileiro." },
+            ...historico
+          ];
+
           const fazerRequisicao = async (tentativa = 1) => {
             try {
               const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -1822,7 +1835,7 @@ async function startProo() {
                 },
                 body: JSON.stringify({
                   model: GROQ_MODEL,
-                  messages: [{ role: "user", content: q }]
+                  messages: mensagensParaEnviar
                 })
               });
 
@@ -1848,11 +1861,25 @@ async function startProo() {
 
           try {
             const text = await fazerRequisicao();
+            historico.push({ role: "assistant", content: text });
+
+            // limitar tamanho do histórico
+            while (historico.length > MAX_HISTORICO) {
+              historico.shift();
+            }
+
             enviar(text);
           } catch (err) {
+            // remover a última mensagem do user se deu erro
+            historico.pop();
             console.error(err);
             enviar(`Error`);
           }
+          break;
+
+        case "limpar":
+          historicoIA.delete(sender);
+          enviar("🗑️ Histórico de conversa com a IA limpo!");
           break;
 
         case "debug":
