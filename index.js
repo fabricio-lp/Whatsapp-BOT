@@ -1428,12 +1428,20 @@ async function startProo() {
             if (JSON.stringify(info).includes("videoMessage")) {
               viewVideo.viewOnce = false;
               viewVideo.video = { url: viewVideo.url };
-              viewVideo.caption += "Vídeo *revelado*";
+              if (viewVideo.caption && viewVideo.caption.length > 0) {
+                viewVideo.caption += " Vídeo *revelado*";
+              } else {
+                viewVideo.caption = " Vídeo *revelado*";
+              }
               sock.sendMessage(from, viewVideo);
             } else if (JSON.stringify(info).includes("imageMessage")) {
               viewImage.viewOnce = false;
               viewImage.image = { url: `${viewImage.url}` };
-              viewImage.caption += "Foto *revelada*";
+              if (viewImage.caption && viewImage.caption.length > 0) {
+                viewImage.caption += " Foto *revelada*";
+              } else {
+                viewImage.caption = " Foto *revelada*";
+              }
               sock.sendMessage(from, viewImage);
             } else {
               enviar(
