@@ -1429,7 +1429,7 @@ async function startProo() {
               viewVideo.viewOnce = false;
               viewVideo.video = { url: viewVideo.url };
               if (viewVideo.caption && viewVideo.caption.length > 0) {
-                viewVideo.caption = "*Vídeo *revelado:* " + viewVideo.caption;
+                viewVideo.caption = "*Vídeo revelado:* " + viewVideo.caption;
               } else {
                 viewVideo.caption = "*Vídeo revelado*";
               }
