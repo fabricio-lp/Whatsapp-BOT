@@ -1429,18 +1429,18 @@ async function startProo() {
               viewVideo.viewOnce = false;
               viewVideo.video = { url: viewVideo.url };
               if (viewVideo.caption && viewVideo.caption.length > 0) {
-                viewVideo.caption += " Vídeo *revelado*";
+                viewVideo.caption = "*Vídeo *revelado:* " + viewVideo.caption;
               } else {
-                viewVideo.caption = " Vídeo *revelado*";
+                viewVideo.caption = "*Vídeo revelado*";
               }
               sock.sendMessage(from, viewVideo);
             } else if (JSON.stringify(info).includes("imageMessage")) {
               viewImage.viewOnce = false;
               viewImage.image = { url: `${viewImage.url}` };
               if (viewImage.caption && viewImage.caption.length > 0) {
-                viewImage.caption += " Foto *revelada*";
+                viewImage.caption = "*Foto revelada:* " + viewImage.caption;
               } else {
-                viewImage.caption = " Foto *revelada*";
+                viewImage.caption = "*Foto revelada*";
               }
               sock.sendMessage(from, viewImage);
             } else {
